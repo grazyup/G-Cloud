@@ -96,5 +96,5 @@
 文件系统对接第三方存储``使用到策略模式抽象``  (OSS、FastDFS)
 
 #### 六、项目技术架构设计
+![输入图片说明](image-20240117013430005.png)
 
-![image-20240117013430005](C:\Users\gaofu\AppData\Roaming\Typora\typora-user-images\image-20240117013430005.png)
