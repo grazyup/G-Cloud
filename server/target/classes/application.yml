@@ -21,3 +21,16 @@ management:
       exposure:
         include: '*'
         exclude: env,beans
+
+
+swagger2:
+  show: true
+  group-name: ${spring.application.name}
+  base-package: com.grazy
+  title: G-Cloud-server docs
+  description: G-Cloud-server docs
+  terms-of-service-url: http://127.0.0.1:${server.port}
+  contact-name: grazy
+  contact-url: null
+  contact-email: grazyup@163.com
+  version: 1.0
