@@ -36,7 +36,7 @@ swagger2:
   version: 1.0
 
 
-logging:
-  file: C:/Users/gaofu/logs/${spring.application.name}/${spring.application.name}.log
-  level:
-    root: INFO
+#logging:
+#  file: C:/Users/gaofu/logs/${spring.application.name}/${spring.application.name}.log
+#  level:
+#    root: INFO

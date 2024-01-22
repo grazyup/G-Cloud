@@ -75,7 +75,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.grazy.server.GCloudServerLauncher</mainClass>
+                    <mainClass>com.grazy.GCloudServerLauncher</mainClass>
                     <layout>ZIP</layout>
                 </configuration>
                 <executions>
