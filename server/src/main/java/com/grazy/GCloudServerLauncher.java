@@ -6,9 +6,11 @@ import io.swagger.annotations.Api;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.constraints.NotBlank;
 
 /**
  * @Author: grazy
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @ServletComponentScan(basePackages = GCloudConstants.BASE_COMPONENT_SCAN_PATH)
 @RestController
 @Api("测试接口")
+@Validated
 public class GCloudServerLauncher {
 
     public static void main(String[] args) {
@@ -27,7 +30,7 @@ public class GCloudServerLauncher {
     }
 
     @GetMapping("hello")
-    public R<String> hello(@RequestParam(value = "name", required = false) String name) {
+    public R<String> hello(@NotBlank(message = "name不能为空") String name) {
         return R.success("hello " + name + "!");
     }
 
