@@ -1,0 +1,22 @@
+{
+  "properties": [
+    {
+      "name": "com.grazy.cache.caffeine.init-cache-capacity",
+      "type": "java.lang.Integer",
+      "description": "caffeine缓存的初始容量",
+      "defaultValue": 256
+    },
+    {
+      "name": "com.grazy.cache.caffeine.max-cache-capacity",
+      "type": "java.lang.Long",
+      "description": "caffeine缓存的最大容量",
+      "defaultValue": "10000L"
+    },
+    {
+      "name": "com.grazy.cache.caffeine.allow-null-value",
+      "type": "java.lang.Boolean",
+      "description": "是否允许空值Value",
+      "defaultValue": true
+    }
+  ]
+}

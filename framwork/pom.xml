@@ -17,6 +17,7 @@
         <module>web</module>
         <module>swagger2</module>
         <module>orm</module>
+        <module>cache</module>
     </modules>
 
     <properties>

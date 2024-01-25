@@ -48,3 +48,11 @@ logging:
   file: C:/Users/gaofu/logs/${spring.application.name}/${spring.application.name}.log
   level:
     root: INFO
+
+com:
+  grazy:
+    cache:
+      caffeine:
+        init-cache-capacity: 128
+        max-cache-capacity: 10000
+        all-null-value: true

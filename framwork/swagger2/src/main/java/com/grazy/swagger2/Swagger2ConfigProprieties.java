@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  */
 
 @Component
-//自动装配配置文件中前缀为swagger2中的属性值，可省略@Value注解获取值
+//配置文件中前缀为swagger2的属性会自动映射到该类中对应的属性值，可省略@Value注解获取值
 @ConfigurationProperties(prefix = "swagger2")
 @Data
 public class Swagger2ConfigProprieties {
