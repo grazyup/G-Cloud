@@ -36,7 +36,7 @@
 
         <dependency>
             <groupId>com.grazy</groupId>
-            <artifactId>G-Cloud-cache-caffeine</artifactId>
+            <artifactId>G-Cloud-cache-redis</artifactId>
             <version>1.0</version>
         </dependency>
     </dependencies>

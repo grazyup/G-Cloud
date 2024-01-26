@@ -16,6 +16,9 @@ spring:
     password: 250628
     url: jdbc:mysql://localhost:3306/G-Cloud?characterEncoding=utf8&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: 192.168.195.100
+    port: 6379
 
 mybatis-plus:
   mapper-locations: classpath:mappers/**/*.xml

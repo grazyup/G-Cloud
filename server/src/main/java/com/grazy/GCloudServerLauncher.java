@@ -3,10 +3,13 @@ package com.grazy;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.response.R;
 import io.swagger.annotations.Api;
+import org.apache.commons.lang3.text.StrTokenizer;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,8 +36,12 @@ public class GCloudServerLauncher {
         SpringApplication.run(GCloudServerLauncher.class);
     }
 
+    @Autowired
+    private RedisTemplate<String,Object> redisTemplate;
+
     @GetMapping("hello")
     public R<String> hello(@NotBlank(message = "name不能为空") String name) {
+        redisTemplate.opsForValue().set("test","测试");
         return R.success("hello " + name + "!");
     }
 
