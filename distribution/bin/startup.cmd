@@ -19,11 +19,11 @@ set "PAN_JVM_OPTS=-Xms512m -Xmx512m -Xmn256m"
 rem set pan server options
 set "PAN_OPTS=%PAN_OPTS% -jar %BASE_DIR%\target\%SERVER%.jar"
 
-rem set pan server spring config location
-set "PAN_CONFIG_OPTS=--spring.config.additional-location=%CUSTOM_SEARCH_LOCATIONS%"
+rem set pan server spring com.grazy.config location
+set "PAN_CONFIG_OPTS=--spring.com.grazy.config.additional-location=%CUSTOM_SEARCH_LOCATIONS%"
 
 rem set pan server log4j file location
-set "PAN_LOG4J_OPTS=--logging.config=%BASE_DIR%/conf/G-Cloud-server-logback.xml"
+set "PAN_LOG4J_OPTS=--logging.com.grazy.config=%BASE_DIR%/conf/G-Cloud-server-logback.xml"
 
 
 set COMMAND="%JAVA%" %PAN_JVM_OPTS% %PAN_OPTS% %PAN_CONFIG_OPTS% %PAN_LOG4J_OPTS%  %*

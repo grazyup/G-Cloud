@@ -18,6 +18,7 @@
         <module>swagger2</module>
         <module>orm</module>
         <module>cache</module>
+        <module>schedule</module>
     </modules>
 
     <properties>
