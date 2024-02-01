@@ -16,30 +16,36 @@
     </properties>
 
     <dependencies>
+
+        <!--web层模块-->
         <dependency>
             <groupId>com.grazy</groupId>
             <artifactId>G-Cloud-web</artifactId>
             <version>1.0</version>
         </dependency>
 
+        <!--接口文档模块-->
         <dependency>
             <groupId>com.grazy</groupId>
             <artifactId>G-Cloud-swagger2</artifactId>
             <version>1.0</version>
         </dependency>
 
+        <!--数据持久层模块-->
         <dependency>
             <groupId>com.grazy</groupId>
             <artifactId>G-Cloud-mybatis-Plus</artifactId>
             <version>1.0</version>
         </dependency>
 
+        <!--Redis缓存模块-->
         <dependency>
             <groupId>com.grazy</groupId>
             <artifactId>G-Cloud-cache-redis</artifactId>
             <version>1.0</version>
         </dependency>
 
+        <!--定时任务模块-->
         <dependency>
             <groupId>com.grazy</groupId>
             <artifactId>G-Cloud-schedule</artifactId>

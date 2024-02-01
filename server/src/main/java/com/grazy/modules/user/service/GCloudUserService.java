@@ -1,5 +1,6 @@
 package com.grazy.modules.user.service;
 
+import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.domain.GCloudUser;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -10,4 +11,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface GCloudUserService extends IService<GCloudUser> {
 
+    /**
+     * 用户注册业务
+     * @param userRegisterContext 注册信息对象
+     * @return 用户ID
+     */
+    Long register(UserRegisterContext userRegisterContext);
 }
