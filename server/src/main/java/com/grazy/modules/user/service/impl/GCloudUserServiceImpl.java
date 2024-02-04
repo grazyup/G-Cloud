@@ -1,25 +1,30 @@
 package com.grazy.modules.user.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.grazy.constants.CacheConstants;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.response.ResponseCode;
 import com.grazy.core.utils.IdUtil;
+import com.grazy.core.utils.JwtUtil;
 import com.grazy.core.utils.PasswordUtil;
 import com.grazy.modules.file.constants.FileConstants;
 import com.grazy.modules.file.context.CreateFolderContext;
 import com.grazy.modules.file.service.GCloudUserFileService;
+import com.grazy.modules.user.constants.UserConstant;
+import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.converter.UserConverter;
 import com.grazy.modules.user.domain.GCloudUser;
-import com.grazy.modules.user.service.GCloudUserService;
 import com.grazy.modules.user.mapper.GCloudUserMapper;
+import com.grazy.modules.user.service.GCloudUserService;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.io.File;
 import java.util.Date;
-import java.util.DuplicateFormatFlagsException;
 import java.util.Objects;
 
 /**
@@ -36,6 +41,9 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
 
     @Resource
     private GCloudUserFileService gCloudUserFileService;
+
+    @Resource
+    private CacheManager cacheManager;
 
 
     /**
@@ -61,6 +69,25 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
         createUserRootFolder(userRegisterContext);
         return userRegisterContext.getEntity().getUserId();
     }
+
+
+    /**
+     * 用户登录业务实现
+     * 需要实现的功能点:
+     * 1、用户登录信息的校验
+     * 2、生成一个具有时效性的登录凭证
+     * 3、缓存登录凭证，实现简单的单机登录
+     *
+     * @param userLoginContext 用户登录信息
+     * @return 登录凭证
+     */
+    @Override
+    public String login(UserLoginContext userLoginContext) {
+        checkLoginInfo(userLoginContext);
+        generateAndSaveAccessToken(userLoginContext);
+        return userLoginContext.getAccessToken();
+    }
+
 
 
     /**
@@ -120,6 +147,59 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
         gCloudUser.setCreateTime(new Date());
         gCloudUser.setUpdateTime(new Date());
         userRegisterContext.setEntity(gCloudUser);
+    }
+
+
+    /**
+     * 构建并保存登录凭证accessToke
+     *
+     * @param userLoginContext 用户登录对象上下文参数信息
+     */
+    private void generateAndSaveAccessToken(UserLoginContext userLoginContext) {
+        GCloudUser entity = userLoginContext.getEntity();
+        String accessToken = JwtUtil.generateToken(entity.getUsername(), UserConstant.LOGIN_USER_ID,
+                entity.getUserId(), UserConstant.ONE_DAY_LONG);
+        userLoginContext.setAccessToken(accessToken);
+
+        //存储到Redis缓存中
+        Cache managerCache = cacheManager.getCache(CacheConstants.G_CLOUD_CACHE_NAME);
+        managerCache.put(UserConstant.USER_LOGIN_PREFIX + entity.getUserId(), accessToken);
+    }
+
+
+    /**
+     * 检查用户登录信息
+     *
+     * @param userLoginContext 用户登录对象上下文参数信息
+     */
+    private void checkLoginInfo(UserLoginContext userLoginContext) {
+        String username = userLoginContext.getUsername();
+        String password = userLoginContext.getPassword();
+
+        //根据用户名查询数据库中用户对象信息
+        GCloudUser entity = selectUserInfo(username);
+        if(Objects.isNull(entity)){
+            throw new GCloudBusinessException("用户名不存在！");
+        }
+        //检查密码是否正确
+        String salt = entity.getSalt();
+        String encryptPassword = PasswordUtil.encryptPassword(salt, password);
+        if(!Objects.equals(encryptPassword,entity.getPassword())){
+            throw new GCloudBusinessException("密码错误！");
+        }
+        userLoginContext.setEntity(entity);
+    }
+
+
+    /**
+     * 根据用户名查询数据库中用户对象信息
+     * @param username 登录用户名
+     * @return 用户对象实体
+     */
+    private GCloudUser selectUserInfo(String username) {
+        LambdaQueryWrapper<GCloudUser> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(GCloudUser::getUsername,username);
+        return getOne(lambdaQueryWrapper);
     }
 }
 

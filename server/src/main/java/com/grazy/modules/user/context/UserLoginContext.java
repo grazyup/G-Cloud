@@ -7,15 +7,14 @@ import java.io.Serializable;
 
 /**
  * @Author: grazy
- * @Date: 2024-01-29 23:28
+ * @Date: 2024-02-04 8:18
  * @Description: 用户注册业务的上下文传参对象
- * (分类各个传参对象类是为了以后好维护)
  */
 
 @Data
-public class UserRegisterContext implements Serializable {
+public class UserLoginContext implements Serializable {
 
-    private static final long serialVersionUID = 4803785508644596547L;
+    private static final long serialVersionUID = 3450144964109148421L;
 
     /**
      * 用户名
@@ -28,19 +27,12 @@ public class UserRegisterContext implements Serializable {
     private String password;
 
     /**
-     * 密保问题
+     * 登录凭证
      */
-    private String question;
+    private String accessToken;
 
     /**
-     * 密保答案
-     */
-    private String answer;
-
-
-    /**
-     * 用户对象实体类
+     * 用户对象实体
      */
     private GCloudUser entity;
-
 }

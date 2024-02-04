@@ -2,13 +2,16 @@ package com.grazy.modules.user.controller;
 
 import com.grazy.core.response.R;
 import com.grazy.core.utils.IdUtil;
+import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.converter.UserConverter;
+import com.grazy.modules.user.po.UserLoginPo;
 import com.grazy.modules.user.po.UserRegisterPo;
 import com.grazy.modules.user.service.GCloudUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,11 +43,25 @@ public class UserController {
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @PostMapping("/register")
-    public R<String> register(@RequestBody UserRegisterPo userRegisterPo){
+    public R<String> register(@Validated @RequestBody UserRegisterPo userRegisterPo){
         //实体类转换
         UserRegisterContext userRegisterContext = userConverter.UserRegisterPoTOUserRegisterContext(userRegisterPo);
         Long userId = userService.register(userRegisterContext);
         //返回加密后的用户id
         return R.data(IdUtil.encrypt(userId));
+    }
+
+
+    @ApiOperation(
+            value = "用户登录接口",
+            notes = "该接口提供功能为用户登录，登录成功后返回一个具有时效性的登录凭证accessToken",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("/login")
+    public R<String> login(@Validated @RequestBody UserLoginPo userLoginPo){
+        UserLoginContext userLoginContext = userConverter.UserLoginPoToUserLoginContext(userLoginPo);
+        String accessToken = userService.login(userLoginContext);
+        return R.data(accessToken);
     }
 }

@@ -3,8 +3,10 @@ package com.grazy.modules.user;
 import cn.hutool.core.lang.Assert;
 import com.grazy.GCloudServerLauncher;
 import com.grazy.core.exception.GCloudBusinessException;
+import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.service.GCloudUserService;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,11 +36,22 @@ public class userTest {
      */
     private UserRegisterContext createUserRegisterContext(){
         UserRegisterContext userRegisterContext = new UserRegisterContext();
-        userRegisterContext.setUserName("user");
-        userRegisterContext.setPassword("123123");
+        userRegisterContext.setUsername("user");
+        userRegisterContext.setPassword("123123123");
         userRegisterContext.setQuestion("question");
         userRegisterContext.setAnswer("answer");
         return userRegisterContext;
+    }
+
+
+    /**
+     * 创建登录实体
+     */
+    private UserLoginContext createUserLoginContext(){
+        UserLoginContext userLoginContext = new UserLoginContext();
+        userLoginContext.setUsername("user");
+        userLoginContext.setPassword("123123123");
+        return userLoginContext;
     }
 
 
@@ -66,4 +79,50 @@ public class userTest {
         gCloudUserService.register(userRegisterContext);
     }
 
+
+    /**
+     * 测试用户登录成功
+     */
+    @Test
+    public void loginSuccess(){
+        UserRegisterContext userRegisterContext = this.createUserRegisterContext();
+        Long register = gCloudUserService.register(userRegisterContext);
+        Assert.isTrue(register.longValue() > 0L);
+
+        UserLoginContext userLoginContext = createUserLoginContext();
+        String token = gCloudUserService.login(userLoginContext);
+        Assert.isTrue(StringUtils.isNoneBlank(token));
+    }
+
+
+    /**
+     * 测试用户登录名错误
+     */
+    @Test(expected = GCloudBusinessException.class)
+    public void errorUsername(){
+        UserRegisterContext userRegisterContext = this.createUserRegisterContext();
+        Long register = gCloudUserService.register(userRegisterContext);
+        Assert.isTrue(register.longValue() > 0L);
+
+        UserLoginContext userLoginContext = createUserLoginContext();
+        userLoginContext.setUsername("change_username");
+        String token = gCloudUserService.login(userLoginContext);
+        Assert.isTrue(StringUtils.isNoneBlank(token));
+    }
+
+
+    /**
+     * 测试用户密码错误
+     */
+    @Test(expected = GCloudBusinessException.class)
+    public void errorPassword(){
+        UserRegisterContext userRegisterContext = this.createUserRegisterContext();
+        Long register = gCloudUserService.register(userRegisterContext);
+        Assert.isTrue(register.longValue() > 0L);
+
+        UserLoginContext userLoginContext = createUserLoginContext();
+        userLoginContext.setPassword("123456789");
+        String token = gCloudUserService.login(userLoginContext);
+        Assert.isTrue(StringUtils.isNoneBlank(token));
+    }
 }
