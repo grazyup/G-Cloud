@@ -1,5 +1,6 @@
 package com.grazy.modules.user.controller;
 
+import com.grazy.common.utils.UserIdUtil;
 import com.grazy.core.response.R;
 import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.user.context.UserLoginContext;
@@ -63,5 +64,19 @@ public class UserController {
         UserLoginContext userLoginContext = userConverter.UserLoginPoToUserLoginContext(userLoginPo);
         String accessToken = userService.login(userLoginContext);
         return R.data(accessToken);
+    }
+
+
+    @ApiOperation(
+            value = "用户登出",
+            notes = "该接口提供功能为用户登出",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("/exit")
+    public R<String> exit(){
+        //从ThreadLocal中获取用户ID
+        userService.exit(UserIdUtil.get());
+        return R.success();
     }
 }

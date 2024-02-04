@@ -3,6 +3,8 @@ package com.grazy.modules.user;
 import cn.hutool.core.lang.Assert;
 import com.grazy.GCloudServerLauncher;
 import com.grazy.core.exception.GCloudBusinessException;
+import com.grazy.core.utils.JwtUtil;
+import com.grazy.modules.user.constants.UserConstant;
 import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.service.GCloudUserService;
@@ -124,5 +126,25 @@ public class userTest {
         userLoginContext.setPassword("123456789");
         String token = gCloudUserService.login(userLoginContext);
         Assert.isTrue(StringUtils.isNoneBlank(token));
+    }
+
+
+    /**
+     * 测试用户成功退出登录
+     */
+    @Test
+    public void exit(){
+        UserRegisterContext userRegisterContext = this.createUserRegisterContext();
+        Long register = gCloudUserService.register(userRegisterContext);
+        Assert.isTrue(register.longValue() > 0L);
+
+        UserLoginContext userLoginContext = createUserLoginContext();
+        String token = gCloudUserService.login(userLoginContext);
+        Assert.isTrue(StringUtils.isNoneBlank(token));
+
+        //解析accessToken获取用户Id
+        Long userId = (Long)JwtUtil.analyzeToken(token, UserConstant.LOGIN_USER_ID);
+
+        gCloudUserService.exit(userId);
     }
 }

@@ -3,6 +3,7 @@ package com.grazy.modules.user.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.grazy.constants.CacheConstants;
+import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.response.ResponseCode;
 import com.grazy.core.utils.IdUtil;
@@ -86,6 +87,24 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
         checkLoginInfo(userLoginContext);
         generateAndSaveAccessToken(userLoginContext);
         return userLoginContext.getAccessToken();
+    }
+
+
+    /**
+     * 用户登出业务实现
+     * 1、清除缓存中的登录凭证
+     * @param userId 用户id
+     */
+    @Override
+    public void exit(Long userId) {
+        try{
+            //获取缓存管理器
+            Cache cache = cacheManager.getCache(CacheConstants.G_CLOUD_CACHE_NAME);
+            cache.evict(UserConstant.USER_LOGIN_PREFIX +userId);
+        }catch (Exception ex){
+            ex.printStackTrace();
+            throw new GCloudBusinessException("退出登录失败！");
+        }
     }
 
 

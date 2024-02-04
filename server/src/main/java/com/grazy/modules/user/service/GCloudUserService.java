@@ -27,4 +27,11 @@ public interface GCloudUserService extends IService<GCloudUser> {
      * @return 登录凭证accessToken
      */
     String login(UserLoginContext userLoginContext);
+
+    /**
+     * 用户登出业务
+     *
+     * @param userId
+     */
+    void exit(Long userId);
 }
