@@ -1,9 +1,6 @@
 package com.grazy.modules.user.service;
 
-import com.grazy.modules.user.context.CheckAnswerContext;
-import com.grazy.modules.user.context.CheckUsernameContext;
-import com.grazy.modules.user.context.UserLoginContext;
-import com.grazy.modules.user.context.UserRegisterContext;
+import com.grazy.modules.user.context.*;
 import com.grazy.modules.user.domain.GCloudUser;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -52,5 +49,12 @@ public interface GCloudUserService extends IService<GCloudUser> {
      * @return 临时用户身份凭证
      */
     String checkAnswer(CheckAnswerContext checkAnswerContext);
+
+    /**
+     * 忘记密码-重置密码
+     *
+     * @param passwordResetContext 重置密码参数对象
+     */
+    void passwordReset(PasswordResetContext passwordResetContext);
 
 }

@@ -5,10 +5,7 @@ import com.grazy.GCloudServerLauncher;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.utils.JwtUtil;
 import com.grazy.modules.user.constants.UserConstant;
-import com.grazy.modules.user.context.CheckAnswerContext;
-import com.grazy.modules.user.context.CheckUsernameContext;
-import com.grazy.modules.user.context.UserLoginContext;
-import com.grazy.modules.user.context.UserRegisterContext;
+import com.grazy.modules.user.context.*;
 import com.grazy.modules.user.service.GCloudUserService;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -161,7 +158,7 @@ public class userTest {
         Assert.isTrue(register.longValue() > 0L);
 
         CheckUsernameContext checkUsernameContext = new CheckUsernameContext();
-        checkUsernameContext.setUsername("user123");
+        checkUsernameContext.setUsername("user");
         String question = userService.checkUsername(checkUsernameContext);
         System.out.println(question);
         Assert.isTrue(StringUtils.isNoneBlank(question));
@@ -193,9 +190,9 @@ public class userTest {
         Assert.isTrue(register.longValue() > 0L);
 
         CheckAnswerContext checkAnswerContext = new CheckAnswerContext();
-        checkAnswerContext.setUsername("user123");
-        checkAnswerContext.setQuestion("question_test");
-        checkAnswerContext.setAnswer("answer_test");
+        checkAnswerContext.setUsername("user");
+        checkAnswerContext.setQuestion("question");
+        checkAnswerContext.setAnswer("answer");
         String token = userService.checkAnswer(checkAnswerContext);
         Assert.isTrue(StringUtils.isNoneBlank(token));
     }
@@ -211,10 +208,56 @@ public class userTest {
         Assert.isTrue(register.longValue() > 0L);
 
         CheckAnswerContext checkAnswerContext = new CheckAnswerContext();
-        checkAnswerContext.setUsername("user123");
-        checkAnswerContext.setQuestion("question_test");
-        checkAnswerContext.setAnswer("answer");
+        checkAnswerContext.setUsername("user");
+        checkAnswerContext.setQuestion("question");
+        checkAnswerContext.setAnswer("answer_change");
         String token = userService.checkAnswer(checkAnswerContext);
         Assert.isTrue(StringUtils.isNoneBlank(token));
+    }
+
+
+    /**
+     * 测试 忘记密码-重置密码 成功案例
+     */
+    @Test()
+    public void testSuccessResetPassword(){
+        UserRegisterContext userRegisterContext = this.createUserRegisterContext();
+        Long register = userService.register(userRegisterContext);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckAnswerContext checkAnswerContext = new CheckAnswerContext();
+        checkAnswerContext.setUsername("user");
+        checkAnswerContext.setQuestion("question");
+        checkAnswerContext.setAnswer("answer");
+        String token = userService.checkAnswer(checkAnswerContext);
+
+        PasswordResetContext passwordResetContext = new PasswordResetContext();
+        passwordResetContext.setPassword("147258369");
+        passwordResetContext.setUsername("user");
+        passwordResetContext.setToken(token);
+        userService.passwordReset(passwordResetContext);
+
+    }
+
+    /**
+     * 测试 忘记密码-重置密码 失败案例
+     */
+    @Test(expected = GCloudBusinessException.class)
+    public void testErrorResetPassword(){
+        UserRegisterContext userRegisterContext = this.createUserRegisterContext();
+        Long register = userService.register(userRegisterContext);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckAnswerContext checkAnswerContext = new CheckAnswerContext();
+        checkAnswerContext.setUsername("user");
+        checkAnswerContext.setQuestion("question");
+        checkAnswerContext.setAnswer("answer");
+        String token = userService.checkAnswer(checkAnswerContext);
+
+        PasswordResetContext passwordResetContext = new PasswordResetContext();
+        passwordResetContext.setPassword("147258369");
+        passwordResetContext.setUsername("user");
+        passwordResetContext.setToken(token + "change");
+        userService.passwordReset(passwordResetContext);
     }
 }

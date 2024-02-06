@@ -1,14 +1,8 @@
 package com.grazy.modules.user.converter;
 
-import com.grazy.modules.user.context.CheckAnswerContext;
-import com.grazy.modules.user.context.CheckUsernameContext;
-import com.grazy.modules.user.context.UserLoginContext;
-import com.grazy.modules.user.context.UserRegisterContext;
+import com.grazy.modules.user.context.*;
 import com.grazy.modules.user.domain.GCloudUser;
-import com.grazy.modules.user.po.CheckAnswerPo;
-import com.grazy.modules.user.po.CheckUsernamePO;
-import com.grazy.modules.user.po.UserLoginPo;
-import com.grazy.modules.user.po.UserRegisterPo;
+import com.grazy.modules.user.po.*;
 import org.mapstruct.Mapper;
 
 /**
@@ -59,5 +53,13 @@ public interface UserConverter {
      * @return 业务层忘记密码-校验密保答案参数类
      */
     CheckAnswerContext CheckAnswerPoToCheckAnswerContext(CheckAnswerPo checkAnswerPo);
+
+    /**
+     * 控制层忘记密码-重置密码参数类 转为 业务层忘记密码-重置密码参数类
+     *
+     * @param passwordResetPo 控制层忘记密码-重置密码参数类
+     * @return 业务层忘记密码-重置密码参数类
+     */
+    PasswordResetContext PasswordResetPoToPasswordResetContext(PasswordResetPo passwordResetPo);
 
 }

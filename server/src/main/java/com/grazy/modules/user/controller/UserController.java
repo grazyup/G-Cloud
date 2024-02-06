@@ -4,15 +4,9 @@ import com.grazy.common.annotation.LoginIgnore;
 import com.grazy.common.utils.UserIdUtil;
 import com.grazy.core.response.R;
 import com.grazy.core.utils.IdUtil;
-import com.grazy.modules.user.context.CheckAnswerContext;
-import com.grazy.modules.user.context.CheckUsernameContext;
-import com.grazy.modules.user.context.UserLoginContext;
-import com.grazy.modules.user.context.UserRegisterContext;
+import com.grazy.modules.user.context.*;
 import com.grazy.modules.user.converter.UserConverter;
-import com.grazy.modules.user.po.CheckAnswerPo;
-import com.grazy.modules.user.po.CheckUsernamePO;
-import com.grazy.modules.user.po.UserLoginPo;
-import com.grazy.modules.user.po.UserRegisterPo;
+import com.grazy.modules.user.po.*;
 import com.grazy.modules.user.service.GCloudUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -114,5 +108,20 @@ public class UserController {
         CheckAnswerContext checkAnswerContext = userConverter.CheckAnswerPoToCheckAnswerContext(checkAnswerPo);
         String userTemporarilyToken = userService.checkAnswer(checkAnswerContext);
         return R.data(userTemporarilyToken);
+    }
+
+
+    @ApiOperation(
+            value = "忘记密码-重置密码",
+            notes = "该接口提供了用户忘记密码-重置密码的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @PostMapping("/password/reset")
+    public R<String> passwordReset(@Validated @RequestBody PasswordResetPo passwordResetPo){
+        PasswordResetContext passwordResetContext = userConverter.PasswordResetPoToPasswordResetContext(passwordResetPo);
+        userService.passwordReset(passwordResetContext);
+        return R.success("密码修改成功!");
     }
 }

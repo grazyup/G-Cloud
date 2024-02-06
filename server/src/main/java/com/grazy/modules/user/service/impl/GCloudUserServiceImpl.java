@@ -12,10 +12,7 @@ import com.grazy.modules.file.constants.FileConstants;
 import com.grazy.modules.file.context.CreateFolderContext;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.user.constants.UserConstant;
-import com.grazy.modules.user.context.CheckAnswerContext;
-import com.grazy.modules.user.context.CheckUsernameContext;
-import com.grazy.modules.user.context.UserLoginContext;
-import com.grazy.modules.user.context.UserRegisterContext;
+import com.grazy.modules.user.context.*;
 import com.grazy.modules.user.converter.UserConverter;
 import com.grazy.modules.user.domain.GCloudUser;
 import com.grazy.modules.user.mapper.GCloudUserMapper;
@@ -149,6 +146,18 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
     }
 
 
+    /**
+     * 忘记密码-重置密码
+     *
+     * @param passwordResetContext 重置密码参数对象
+     */
+    @Override
+    public void passwordReset(PasswordResetContext passwordResetContext) {
+        checkForgetPasswordToken(passwordResetContext);
+        checkAndResetPassword(passwordResetContext);
+    }
+
+
 
 
     /**
@@ -273,6 +282,45 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
     private String generateCheckAnswerToken(CheckAnswerContext checkAnswerContext) {
         return JwtUtil.generateToken(checkAnswerContext.getUsername(), UserConstant.FORGET_USERNAME,
                 checkAnswerContext.getUsername(), UserConstant.FIVE_MINUTES_LONG);
+    }
+
+
+    /**
+     * 校验和重置密码
+     * @param passwordResetContext 重置密码参数对象
+     */
+    private void checkAndResetPassword(PasswordResetContext passwordResetContext) {
+        String username = passwordResetContext.getUsername();
+        String password = passwordResetContext.getPassword();
+        LambdaQueryWrapper<GCloudUser> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(GCloudUser::getUsername,username);
+        GCloudUser dbGCloudUser = getOne(lambdaQueryWrapper);
+        if(Objects.isNull(dbGCloudUser)){
+            throw new GCloudBusinessException("用户信息不存在！");
+        }
+        //处理新密码加密
+        String encryptPassword = PasswordUtil.encryptPassword(dbGCloudUser.getSalt(), password);
+        dbGCloudUser.setPassword(encryptPassword);
+        dbGCloudUser.setUpdateTime(new Date());
+        if(!updateById(dbGCloudUser)){
+            throw new GCloudBusinessException("重置用户密码失败!");
+        }
+    }
+
+
+    /**
+     * 校验忘记密码的临时身份凭证
+     * @param passwordResetContext 重置密码参数对象
+     */
+    private void checkForgetPasswordToken(PasswordResetContext passwordResetContext) {
+        String token = passwordResetContext.getToken();
+        Object username = JwtUtil.analyzeToken(token, UserConstant.FORGET_USERNAME);
+        if(Objects.isNull(username)){
+            throw new GCloudBusinessException("非法Token");
+        }
+        if(!Objects.equals(String.valueOf(username), passwordResetContext.getUsername())){
+            throw new GCloudBusinessException("token令牌与用户身份不一致");
+        }
     }
 
 }
