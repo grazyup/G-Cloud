@@ -1,5 +1,6 @@
 package com.grazy.modules.user.controller;
 
+import com.grazy.common.annotation.LoginIgnore;
 import com.grazy.common.utils.UserIdUtil;
 import com.grazy.core.response.R;
 import com.grazy.core.utils.IdUtil;
@@ -10,13 +11,11 @@ import com.grazy.modules.user.po.UserLoginPo;
 import com.grazy.modules.user.po.UserRegisterPo;
 import com.grazy.modules.user.service.GCloudUserService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
@@ -43,6 +42,7 @@ public class UserController {
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
+    @LoginIgnore
     @PostMapping("/register")
     public R<String> register(@Validated @RequestBody UserRegisterPo userRegisterPo){
         //实体类转换
@@ -59,6 +59,7 @@ public class UserController {
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
+    @LoginIgnore
     @PostMapping("/login")
     public R<String> login(@Validated @RequestBody UserLoginPo userLoginPo){
         UserLoginContext userLoginContext = userConverter.UserLoginPoToUserLoginContext(userLoginPo);
@@ -73,10 +74,11 @@ public class UserController {
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
+    @ApiImplicitParam(name = "Authorization", value = "Authorization",required = true, dataType = "String",paramType="header")
     @PostMapping("/exit")
     public R<String> exit(){
         //从ThreadLocal中获取用户ID
         userService.exit(UserIdUtil.get());
-        return R.success();
+        return R.success("退出登录成功!");
     }
 }

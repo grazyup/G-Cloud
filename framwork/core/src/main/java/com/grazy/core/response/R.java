@@ -78,7 +78,7 @@ public class R<T> implements Serializable {
      * 成功--携带响应数据(无响应消息)
      */
     public static <T> R<T> data(T data){
-        return new R<>(ResponseCode.SUCCESS.getCode(),data);
+        return new R<>(ResponseCode.SUCCESS. getCode(),ResponseCode.SUCCESS.getDesc(), data);
     }
 
     /**
