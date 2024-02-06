@@ -2,6 +2,7 @@ package com.grazy.modules.user.mapper;
 
 import com.grazy.modules.user.domain.GCloudUser;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
 * @author gaofu
@@ -10,6 +11,13 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.grazy.modules.user.domain.GCloudUser
 */
 public interface GCloudUserMapper extends BaseMapper<GCloudUser> {
+
+    /**
+     * 根据用户名查询密保问题
+     * @param username 用户名
+     * @return 密保问题
+     */
+    String selectQuestionByUsername(@Param("username") String username);
 
 }
 

@@ -1,5 +1,6 @@
 package com.grazy.modules.user.service;
 
+import com.grazy.modules.user.context.CheckUsernameContext;
 import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.domain.GCloudUser;
@@ -34,4 +35,12 @@ public interface GCloudUserService extends IService<GCloudUser> {
      * @param userId
      */
     void exit(Long userId);
+
+    /**
+     * 忘记密码-检验用户名
+     *
+     * @param checkUsernameContext 用户名参数对象
+     * @return 用户对应的密保问题
+     */
+    String checkUsername(CheckUsernameContext checkUsernameContext);
 }

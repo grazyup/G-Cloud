@@ -4,9 +4,11 @@ import com.grazy.common.annotation.LoginIgnore;
 import com.grazy.common.utils.UserIdUtil;
 import com.grazy.core.response.R;
 import com.grazy.core.utils.IdUtil;
+import com.grazy.modules.user.context.CheckUsernameContext;
 import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.converter.UserConverter;
+import com.grazy.modules.user.po.CheckUsernamePO;
 import com.grazy.modules.user.po.UserLoginPo;
 import com.grazy.modules.user.po.UserRegisterPo;
 import com.grazy.modules.user.service.GCloudUserService;
@@ -81,4 +83,19 @@ public class UserController {
         userService.exit(UserIdUtil.get());
         return R.success("退出登录成功!");
     }
+
+    @ApiOperation(
+            value = "忘记密码-检验用户名",
+            notes = "该接口提供了用户忘记密码-校验用户名的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @PostMapping("/username/check")
+    public R<String> checkUsername(@Validated @RequestBody CheckUsernamePO checkUsernamePO){
+        CheckUsernameContext checkUsernameContext = userConverter.CheckUsernamePOToCheckUsernameContext(checkUsernamePO);
+        String question = userService.checkUsername(checkUsernameContext);
+        return R.data(question);
+    }
+
 }

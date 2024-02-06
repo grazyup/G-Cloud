@@ -12,12 +12,14 @@ import com.grazy.modules.file.constants.FileConstants;
 import com.grazy.modules.file.context.CreateFolderContext;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.user.constants.UserConstant;
+import com.grazy.modules.user.context.CheckUsernameContext;
 import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.converter.UserConverter;
 import com.grazy.modules.user.domain.GCloudUser;
 import com.grazy.modules.user.mapper.GCloudUserMapper;
 import com.grazy.modules.user.service.GCloudUserService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.dao.DuplicateKeyException;
@@ -44,6 +46,9 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
 
     @Resource
     private CacheManager cacheManager;
+
+    @Resource
+    private GCloudUserMapper userMapper;
 
 
     /**
@@ -106,6 +111,21 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
         }
     }
 
+
+    /**
+     * 忘记密码-检验用户名
+     *
+     * @param checkUsernameContext 用户名参数对象
+     * @return 用户对应的密保问题
+     */
+    @Override
+    public String checkUsername(CheckUsernameContext checkUsernameContext) {
+        String question = userMapper.selectQuestionByUsername(checkUsernameContext.getUsername());
+        if(StringUtils.isBlank(question)){
+            throw new GCloudBusinessException("用户名不存在！");
+        }
+        return question;
+    }
 
 
     /**

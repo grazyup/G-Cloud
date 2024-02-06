@@ -5,6 +5,7 @@ import com.grazy.GCloudServerLauncher;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.utils.JwtUtil;
 import com.grazy.modules.user.constants.UserConstant;
+import com.grazy.modules.user.context.CheckUsernameContext;
 import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.service.GCloudUserService;
@@ -146,5 +147,37 @@ public class userTest {
         Long userId = (Long)JwtUtil.analyzeToken(token, UserConstant.LOGIN_USER_ID);
 
         gCloudUserService.exit(userId);
+    }
+
+
+    /**
+     * 测试 忘记密码-校验用户名 成功案例
+     */
+    @Test
+    public void testSuccessCheckUsername(){
+        UserRegisterContext userRegisterContext = this.createUserRegisterContext();
+        Long register = gCloudUserService.register(userRegisterContext);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckUsernameContext checkUsernameContext = new CheckUsernameContext();
+        checkUsernameContext.setUsername("user123");
+        String question = gCloudUserService.checkUsername(checkUsernameContext);
+        System.out.println(question);
+        Assert.isTrue(StringUtils.isNoneBlank(question));
+    }
+
+
+    /**
+     * 测试 忘记密码-校验用户名 失败案例
+     */
+    @Test(expected = GCloudBusinessException.class)
+    public void testErrorCheckUsername(){
+        UserRegisterContext userRegisterContext = this.createUserRegisterContext();
+        Long register = gCloudUserService.register(userRegisterContext);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckUsernameContext checkUsernameContext = new CheckUsernameContext();
+        checkUsernameContext.setUsername("user123123");
+        String question = gCloudUserService.checkUsername(checkUsernameContext);
     }
 }

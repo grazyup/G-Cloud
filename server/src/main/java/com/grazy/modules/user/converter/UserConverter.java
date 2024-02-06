@@ -1,8 +1,10 @@
 package com.grazy.modules.user.converter;
 
+import com.grazy.modules.user.context.CheckUsernameContext;
 import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.domain.GCloudUser;
+import com.grazy.modules.user.po.CheckUsernamePO;
 import com.grazy.modules.user.po.UserLoginPo;
 import com.grazy.modules.user.po.UserRegisterPo;
 import org.mapstruct.Mapper;
@@ -39,5 +41,13 @@ public interface UserConverter {
      * @return 业务层用户注册类
      */
     UserLoginContext UserLoginPoToUserLoginContext(UserLoginPo userLoginPo);
+
+    /**
+     * 控制层忘记密码-校验用户名参数类 转为 业务层忘记密码-校验用户名参数类
+     *
+     * @param checkUsernamePO 控制层忘记密码-校验用户名参数类
+     * @return 业务层忘记密码-校验用户名参数类
+     */
+    CheckUsernameContext CheckUsernamePOToCheckUsernameContext(CheckUsernamePO checkUsernamePO);
 
 }
