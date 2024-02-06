@@ -5,6 +5,7 @@ import com.grazy.GCloudServerLauncher;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.utils.JwtUtil;
 import com.grazy.modules.user.constants.UserConstant;
+import com.grazy.modules.user.context.CheckAnswerContext;
 import com.grazy.modules.user.context.CheckUsernameContext;
 import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
@@ -30,7 +31,7 @@ import javax.annotation.Resource;
 public class userTest {
 
     @Resource
-    private GCloudUserService gCloudUserService;
+    private GCloudUserService userService;
 
 
     /**
@@ -64,7 +65,7 @@ public class userTest {
     @Test
     public void testUserRegister(){
         UserRegisterContext userRegisterContext = this.createUserRegisterContext();
-        Long register = gCloudUserService.register(userRegisterContext);
+        Long register = userService.register(userRegisterContext);
         Assert.isTrue(register.longValue() > 0L);
     }
 
@@ -76,10 +77,10 @@ public class userTest {
     public void testRegisterDuplicateUsername(){
         UserRegisterContext userRegisterContext = this.createUserRegisterContext();
         //第一次注册
-        Long register = gCloudUserService.register(userRegisterContext);
+        Long register = userService.register(userRegisterContext);
         Assert.isTrue(register.longValue() > 0L);
         //第二次注册
-        gCloudUserService.register(userRegisterContext);
+        userService.register(userRegisterContext);
     }
 
 
@@ -89,11 +90,11 @@ public class userTest {
     @Test
     public void loginSuccess(){
         UserRegisterContext userRegisterContext = this.createUserRegisterContext();
-        Long register = gCloudUserService.register(userRegisterContext);
+        Long register = userService.register(userRegisterContext);
         Assert.isTrue(register.longValue() > 0L);
 
         UserLoginContext userLoginContext = createUserLoginContext();
-        String token = gCloudUserService.login(userLoginContext);
+        String token = userService.login(userLoginContext);
         Assert.isTrue(StringUtils.isNoneBlank(token));
     }
 
@@ -104,12 +105,12 @@ public class userTest {
     @Test(expected = GCloudBusinessException.class)
     public void errorUsername(){
         UserRegisterContext userRegisterContext = this.createUserRegisterContext();
-        Long register = gCloudUserService.register(userRegisterContext);
+        Long register = userService.register(userRegisterContext);
         Assert.isTrue(register.longValue() > 0L);
 
         UserLoginContext userLoginContext = createUserLoginContext();
         userLoginContext.setUsername("change_username");
-        String token = gCloudUserService.login(userLoginContext);
+        String token = userService.login(userLoginContext);
         Assert.isTrue(StringUtils.isNoneBlank(token));
     }
 
@@ -120,12 +121,12 @@ public class userTest {
     @Test(expected = GCloudBusinessException.class)
     public void errorPassword(){
         UserRegisterContext userRegisterContext = this.createUserRegisterContext();
-        Long register = gCloudUserService.register(userRegisterContext);
+        Long register = userService.register(userRegisterContext);
         Assert.isTrue(register.longValue() > 0L);
 
         UserLoginContext userLoginContext = createUserLoginContext();
         userLoginContext.setPassword("123456789");
-        String token = gCloudUserService.login(userLoginContext);
+        String token = userService.login(userLoginContext);
         Assert.isTrue(StringUtils.isNoneBlank(token));
     }
 
@@ -136,17 +137,17 @@ public class userTest {
     @Test
     public void exit(){
         UserRegisterContext userRegisterContext = this.createUserRegisterContext();
-        Long register = gCloudUserService.register(userRegisterContext);
+        Long register = userService.register(userRegisterContext);
         Assert.isTrue(register.longValue() > 0L);
 
         UserLoginContext userLoginContext = createUserLoginContext();
-        String token = gCloudUserService.login(userLoginContext);
+        String token = userService.login(userLoginContext);
         Assert.isTrue(StringUtils.isNoneBlank(token));
 
         //解析accessToken获取用户Id
         Long userId = (Long)JwtUtil.analyzeToken(token, UserConstant.LOGIN_USER_ID);
 
-        gCloudUserService.exit(userId);
+        userService.exit(userId);
     }
 
 
@@ -156,12 +157,12 @@ public class userTest {
     @Test
     public void testSuccessCheckUsername(){
         UserRegisterContext userRegisterContext = this.createUserRegisterContext();
-        Long register = gCloudUserService.register(userRegisterContext);
+        Long register = userService.register(userRegisterContext);
         Assert.isTrue(register.longValue() > 0L);
 
         CheckUsernameContext checkUsernameContext = new CheckUsernameContext();
         checkUsernameContext.setUsername("user123");
-        String question = gCloudUserService.checkUsername(checkUsernameContext);
+        String question = userService.checkUsername(checkUsernameContext);
         System.out.println(question);
         Assert.isTrue(StringUtils.isNoneBlank(question));
     }
@@ -173,11 +174,47 @@ public class userTest {
     @Test(expected = GCloudBusinessException.class)
     public void testErrorCheckUsername(){
         UserRegisterContext userRegisterContext = this.createUserRegisterContext();
-        Long register = gCloudUserService.register(userRegisterContext);
+        Long register = userService.register(userRegisterContext);
         Assert.isTrue(register.longValue() > 0L);
 
         CheckUsernameContext checkUsernameContext = new CheckUsernameContext();
         checkUsernameContext.setUsername("user123123");
-        String question = gCloudUserService.checkUsername(checkUsernameContext);
+        String question = userService.checkUsername(checkUsernameContext);
+    }
+
+    
+    /**
+     * 测试 忘记密码-校验密保答案 成功案例
+     */
+    @Test()
+    public void testSuccessCheckAnswer(){
+        UserRegisterContext userRegisterContext = this.createUserRegisterContext();
+        Long register = userService.register(userRegisterContext);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckAnswerContext checkAnswerContext = new CheckAnswerContext();
+        checkAnswerContext.setUsername("user123");
+        checkAnswerContext.setQuestion("question_test");
+        checkAnswerContext.setAnswer("answer_test");
+        String token = userService.checkAnswer(checkAnswerContext);
+        Assert.isTrue(StringUtils.isNoneBlank(token));
+    }
+    
+    
+    /**
+     * 测试 忘记密码-校验密保答案 失败案例
+     */
+    @Test(expected = GCloudBusinessException.class)
+    public void testErrorCheckAnswer(){
+        UserRegisterContext userRegisterContext = this.createUserRegisterContext();
+        Long register = userService.register(userRegisterContext);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckAnswerContext checkAnswerContext = new CheckAnswerContext();
+        checkAnswerContext.setUsername("user123");
+        checkAnswerContext.setQuestion("question_test");
+        checkAnswerContext.setAnswer("answer");
+        String token = userService.checkAnswer(checkAnswerContext);
+        Assert.isTrue(StringUtils.isNoneBlank(token));
     }
 }

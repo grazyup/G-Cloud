@@ -21,8 +21,20 @@ public interface UserConstant {
 
 
     /**
+     * 用户忘记密码-重置密码临时token的key
+     */
+    String FORGET_USERNAME = "FORGET_USERNAME";
+
+
+    /**
      * 一天时间的毫秒数
      */
     Long ONE_DAY_LONG = 24L * 60L * 60L * 1000L;
+
+
+    /**
+     * 五分钟的毫秒值
+     */
+    Long FIVE_MINUTES_LONG = 5L * 60L * 1000L;
 
 }

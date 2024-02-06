@@ -4,10 +4,12 @@ import com.grazy.common.annotation.LoginIgnore;
 import com.grazy.common.utils.UserIdUtil;
 import com.grazy.core.response.R;
 import com.grazy.core.utils.IdUtil;
+import com.grazy.modules.user.context.CheckAnswerContext;
 import com.grazy.modules.user.context.CheckUsernameContext;
 import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.converter.UserConverter;
+import com.grazy.modules.user.po.CheckAnswerPo;
 import com.grazy.modules.user.po.CheckUsernamePO;
 import com.grazy.modules.user.po.UserLoginPo;
 import com.grazy.modules.user.po.UserRegisterPo;
@@ -84,6 +86,7 @@ public class UserController {
         return R.success("退出登录成功!");
     }
 
+
     @ApiOperation(
             value = "忘记密码-检验用户名",
             notes = "该接口提供了用户忘记密码-校验用户名的功能",
@@ -98,4 +101,18 @@ public class UserController {
         return R.data(question);
     }
 
+
+    @ApiOperation(
+            value = "忘记密码-校验密保答案",
+            notes = "该接口提供了用户忘记密码-校验密保答案的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @PostMapping("/answer/check")
+    public R<String> checkAnswer(@Validated @RequestBody CheckAnswerPo checkAnswerPo){
+        CheckAnswerContext checkAnswerContext = userConverter.CheckAnswerPoToCheckAnswerContext(checkAnswerPo);
+        String userTemporarilyToken = userService.checkAnswer(checkAnswerContext);
+        return R.data(userTemporarilyToken);
+    }
 }

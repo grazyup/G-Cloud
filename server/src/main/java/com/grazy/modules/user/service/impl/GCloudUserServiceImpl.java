@@ -12,6 +12,7 @@ import com.grazy.modules.file.constants.FileConstants;
 import com.grazy.modules.file.context.CreateFolderContext;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.user.constants.UserConstant;
+import com.grazy.modules.user.context.CheckAnswerContext;
 import com.grazy.modules.user.context.CheckUsernameContext;
 import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
@@ -129,6 +130,28 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
 
 
     /**
+     * 忘记密码-校验密保答案
+     *
+     * @param checkAnswerContext 密保校验参数对象
+     * @return 临时用户身份凭证
+     */
+    @Override
+    public String checkAnswer(CheckAnswerContext checkAnswerContext) {
+        LambdaQueryWrapper<GCloudUser> gCloudUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        gCloudUserLambdaQueryWrapper.eq(GCloudUser::getUsername,checkAnswerContext.getUsername())
+                .eq(GCloudUser::getQuestion,checkAnswerContext.getQuestion())
+                .eq(GCloudUser::getAnswer,checkAnswerContext.getAnswer());
+        int count = count(gCloudUserLambdaQueryWrapper);
+        if(count == 0){
+            throw new GCloudBusinessException("密保答案错误！");
+        }
+        return generateCheckAnswerToken(checkAnswerContext);
+    }
+
+
+
+
+    /**
      * 创建注册用户的根目录
      *
      * @param userRegisterContext 注册对象上下文信息
@@ -239,6 +262,19 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
         lambdaQueryWrapper.eq(GCloudUser::getUsername,username);
         return getOne(lambdaQueryWrapper);
     }
+
+
+    /**
+     * 生成 校验密保答案 通过后的临时身份凭证 -- 有效期为5分钟
+     *
+     * @param checkAnswerContext 密保参数对象
+     * @return 临时身份凭证
+     */
+    private String generateCheckAnswerToken(CheckAnswerContext checkAnswerContext) {
+        return JwtUtil.generateToken(checkAnswerContext.getUsername(), UserConstant.FORGET_USERNAME,
+                checkAnswerContext.getUsername(), UserConstant.FIVE_MINUTES_LONG);
+    }
+
 }
 
 
