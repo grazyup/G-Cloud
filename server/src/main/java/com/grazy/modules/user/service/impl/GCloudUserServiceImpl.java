@@ -158,6 +158,20 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
     }
 
 
+    /**
+     * 在线修改密码
+     *
+     * @param onlineChangePasswordContext 在线修改密码参数对象
+     */
+    @Override
+    public void passwordOnlineChange(OnlineChangePasswordContext onlineChangePasswordContext) {
+        checkOldPassword(onlineChangePasswordContext);
+        changePassword(onlineChangePasswordContext);
+        //退出登录
+        exit(onlineChangePasswordContext.getUserId());
+    }
+
+
 
 
     /**
@@ -323,6 +337,41 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
         }
     }
 
+
+    /**
+     * 执行修改在线修改密码逻辑
+     *
+     * @param onlineChangePasswordContext 在线修改密码参数对象
+     */
+    private void changePassword(OnlineChangePasswordContext onlineChangePasswordContext) {
+        String newPassword = onlineChangePasswordContext.getNewPassword();
+        GCloudUser entity = onlineChangePasswordContext.getEntity();
+        String encryptPassword = PasswordUtil.encryptPassword(entity.getSalt(), newPassword);
+        entity.setPassword(encryptPassword);
+        entity.setUpdateTime(new Date());
+        if(!updateById(entity)){
+            throw new GCloudBusinessException("修改用户密码失败");
+        }
+    }
+
+
+    /**
+     * 校验旧密码
+     *
+     * @param onlineChangePasswordContext 在线修改密码参数对象
+     */
+    private void checkOldPassword(OnlineChangePasswordContext onlineChangePasswordContext) {
+        GCloudUser entity = getById(onlineChangePasswordContext.getUserId());
+        if (Objects.isNull(entity)) {
+            throw new GCloudBusinessException("该用户信息不存在！");
+        }
+        String oldPassword = onlineChangePasswordContext.getOldPassword();
+        String encryptPassword = PasswordUtil.encryptPassword(entity.getSalt(), oldPassword);
+        if (!Objects.equals(encryptPassword, entity.getPassword())) {
+            throw new GCloudBusinessException("旧密码不正确！");
+        }
+        onlineChangePasswordContext.setEntity(entity);
+    }
 }
 
 

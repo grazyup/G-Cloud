@@ -57,4 +57,11 @@ public interface GCloudUserService extends IService<GCloudUser> {
      */
     void passwordReset(PasswordResetContext passwordResetContext);
 
+    /**
+     * 在线修改密码
+     *
+     * @param onlineChangePasswordContext 在线修改密码参数对象
+     */
+    void passwordOnlineChange(OnlineChangePasswordContext onlineChangePasswordContext);
+
 }

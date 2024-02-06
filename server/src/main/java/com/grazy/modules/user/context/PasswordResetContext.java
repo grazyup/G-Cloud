@@ -1,18 +1,13 @@
 package com.grazy.modules.user.context;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 
 /**
  * @Author: grazy
  * @Date: 2024-02-07 3:48
- * @Description: 忘记密码-重置密码 前端传参交互对象类
+ * @Description: 忘记密码-重置密码 业务的上下文传参对象
  */
 
 @Data

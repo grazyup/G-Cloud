@@ -62,4 +62,12 @@ public interface UserConverter {
      */
     PasswordResetContext PasswordResetPoToPasswordResetContext(PasswordResetPo passwordResetPo);
 
+    /**
+     * 控制层在线修改密码参数类 转为 业务层在线修改密码参数类
+     *
+     * @param onlineChangePasswordPo 控制层在线修改密码参数类
+     * @return 业务层在线修改密码参数类
+     */
+    OnlineChangePasswordContext OnlineChangePasswordPoToOnlineChangePasswordContext(OnlineChangePasswordPo onlineChangePasswordPo);
+
 }
