@@ -8,6 +8,7 @@ import com.grazy.modules.user.context.*;
 import com.grazy.modules.user.converter.UserConverter;
 import com.grazy.modules.user.po.*;
 import com.grazy.modules.user.service.GCloudUserService;
+import com.grazy.modules.user.vo.UserInfoVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -139,5 +140,19 @@ public class UserController {
         onlineChangePasswordContext.setUserId(UserIdUtil.get());
         userService.passwordOnlineChange(onlineChangePasswordContext);
         return R.success("密码修改成功!");
+    }
+
+
+    @ApiOperation(
+            value = "查询用户基本信息",
+            notes = "该接口提供了查询用户基本信息的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @ApiImplicitParam(name = "Authorization", value = "Authorization",required = true, dataType = "String",paramType="header")
+    @GetMapping("/")
+    public R<UserInfoVo> info(){
+        UserInfoVo userInfo = userService.info(UserIdUtil.get());
+        return R.data(userInfo);
     }
 }

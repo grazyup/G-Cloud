@@ -3,6 +3,7 @@ package com.grazy.modules.user.service;
 import com.grazy.modules.user.context.*;
 import com.grazy.modules.user.domain.GCloudUser;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.grazy.modules.user.vo.UserInfoVo;
 
 /**
  * @author gaofu
@@ -64,4 +65,11 @@ public interface GCloudUserService extends IService<GCloudUser> {
      */
     void passwordOnlineChange(OnlineChangePasswordContext onlineChangePasswordContext);
 
+    /**
+     * 获取用户基本信息
+     *
+     * @param userId 用户id
+     * @return 用户信息实体Vo
+     */
+    UserInfoVo info(Long userId);
 }

@@ -17,4 +17,13 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @param createFolderContext 文件夹上下文信息
      */
     Long createFolder(CreateFolderContext createFolderContext);
+
+
+    /**
+     * 查询用户的根文件夹信息
+     *
+     * @param userId 用户Id
+     * @return 用户根文件夹信息实体
+     */
+    GCloudUserFile getFIleInfo(Long userId);
 }

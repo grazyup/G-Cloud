@@ -38,6 +38,23 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
     }
 
 
+    /**
+     * 查询用户的根文件夹信息
+     *
+     * @param userId 用户Id
+     * @return 用户根文件夹信息实体
+     */
+    @Override
+    public GCloudUserFile getFIleInfo(Long userId) {
+        LambdaQueryWrapper<GCloudUserFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(GCloudUserFile::getUserId,userId)
+                .eq(GCloudUserFile::getDelFlag,DelFlagEnum.NO.getCode())
+                .eq(GCloudUserFile::getFolderFlag,FolderFlagEnum.YES.getCode())
+                .eq(GCloudUserFile::getParentId,FileConstants.TOP_PARENT_ID);
+        return getOne(lambdaQueryWrapper);
+    }
+
+
     /************************************* 通用创建用户文件/文件夹方法 *************************************/
 
     /**

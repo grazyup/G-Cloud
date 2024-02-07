@@ -1,9 +1,12 @@
 package com.grazy.modules.user.converter;
 
+import com.grazy.modules.file.domain.GCloudUserFile;
 import com.grazy.modules.user.context.*;
 import com.grazy.modules.user.domain.GCloudUser;
 import com.grazy.modules.user.po.*;
+import com.grazy.modules.user.vo.UserInfoVo;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 /**
  * @Author: grazy
@@ -70,4 +73,15 @@ public interface UserConverter {
      */
     OnlineChangePasswordContext OnlineChangePasswordPoToOnlineChangePasswordContext(OnlineChangePasswordPo onlineChangePasswordPo);
 
+    /**
+     * 组装UserInfoVo实体
+     *
+     * @param gCloudUser 用户基本信息
+     * @param userFile   用户根文件夹信息
+     * @return Vo实体
+     */
+    @Mapping(source = "gCloudUser.username", target = "username")
+    @Mapping(source = "userFile.fileId", target = "rootFileId")
+    @Mapping(source = "userFile.filename", target = "rootFilename")
+    UserInfoVo assembleUserInfoVO(GCloudUser gCloudUser, GCloudUserFile userFile);
 }

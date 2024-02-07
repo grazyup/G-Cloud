@@ -10,6 +10,7 @@ import com.grazy.core.utils.JwtUtil;
 import com.grazy.core.utils.PasswordUtil;
 import com.grazy.modules.file.constants.FileConstants;
 import com.grazy.modules.file.context.CreateFolderContext;
+import com.grazy.modules.file.domain.GCloudUserFile;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.user.constants.UserConstant;
 import com.grazy.modules.user.context.*;
@@ -17,6 +18,7 @@ import com.grazy.modules.user.converter.UserConverter;
 import com.grazy.modules.user.domain.GCloudUser;
 import com.grazy.modules.user.mapper.GCloudUserMapper;
 import com.grazy.modules.user.service.GCloudUserService;
+import com.grazy.modules.user.vo.UserInfoVo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -172,6 +174,24 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
     }
 
 
+    /**
+     * 获取用户基本信息
+     *
+     * @param userId 用户id
+     * @return 用户信息实体Vo
+     */
+    @Override
+    public UserInfoVo info(Long userId) {
+        GCloudUser entity = getById(userId);
+        if(Objects.isNull(entity)){
+            throw new GCloudBusinessException("用户信息不存在！");
+        }
+        GCloudUserFile userFile = gCloudUserFileService.getFIleInfo(entity.getUserId());
+        if(Objects.isNull(userFile)){
+            throw new GCloudBusinessException("查询用户根文件夹信息失败");
+        }
+        return userConverter.assembleUserInfoVO(entity,userFile);
+    }
 
 
     /**

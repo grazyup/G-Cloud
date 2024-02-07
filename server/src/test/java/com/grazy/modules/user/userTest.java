@@ -7,6 +7,7 @@ import com.grazy.core.utils.JwtUtil;
 import com.grazy.modules.user.constants.UserConstant;
 import com.grazy.modules.user.context.*;
 import com.grazy.modules.user.service.GCloudUserService;
+import com.grazy.modules.user.vo.UserInfoVo;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,6 +16,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.Objects;
 
 /**
  * @Author: grazy
@@ -259,5 +261,19 @@ public class userTest {
         passwordResetContext.setUsername("user");
         passwordResetContext.setToken(token + "change");
         userService.passwordReset(passwordResetContext);
+    }
+
+    /**
+     * 测试获取用户的基本信息
+     */
+    @Test
+    public void info() {
+        UserRegisterContext userRegisterContext = this.createUserRegisterContext();
+        Long register = userService.register(userRegisterContext);
+        Assert.isTrue(register.longValue() > 0L);
+
+        UserInfoVo info = userService.info(register);
+        Assert.isTrue(Objects.nonNull(info));
+
     }
 }
