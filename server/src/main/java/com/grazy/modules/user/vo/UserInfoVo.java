@@ -24,7 +24,7 @@ public class UserInfoVo implements Serializable {
     private String username;
 
     @ApiModelProperty("根文件夹的加密Id")
-    @JsonSerialize(using = IdEncryptSerializer.class) //序列化，避免Long类型的参数传递到前端出现精度丢失
+    @JsonSerialize(using = IdEncryptSerializer.class) //序列化，避免Long类型的参数传递到前端出现精度丢失(id重新加密操作)
     private Long rootFileId;
 
     @ApiModelProperty("根文件夹的名称")

@@ -28,4 +28,13 @@ public interface FileConstants {
      */
     String CN_RIGHT_PARENTHESES_STR = "）";
 
+    /**
+     * 所有文件类型的标识
+     */
+    String ALL_FILE_TYPE = "-1";
+
+    /**
+     * 不是具体文件夹（是一个文件类型选项表示：图片，文档， 音乐）
+     */
+    String NO_DETAIL_FOLDER = "-1";
 }

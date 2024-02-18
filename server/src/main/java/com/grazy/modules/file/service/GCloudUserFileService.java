@@ -2,7 +2,11 @@ package com.grazy.modules.file.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.grazy.modules.file.context.CreateFolderContext;
+import com.grazy.modules.file.context.QueryFileListContext;
 import com.grazy.modules.file.domain.GCloudUserFile;
+import com.grazy.modules.file.vo.GCloudUserFileVO;
+
+import java.util.List;
 
 /**
 * @author gaofu
@@ -26,4 +30,12 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @return 用户根文件夹信息实体
      */
     GCloudUserFile getFIleInfo(Long userId);
+
+    /**
+     * 查询用户的文件列表
+     * @param queryFileListContext 查询列表上下文信息
+     * @return 文件列表数据Vo
+     */
+    List<GCloudUserFileVO> getFileList(QueryFileListContext queryFileListContext);
+
 }

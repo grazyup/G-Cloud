@@ -7,14 +7,18 @@ import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.file.constants.FileConstants;
 import com.grazy.modules.file.context.CreateFolderContext;
+import com.grazy.modules.file.context.QueryFileListContext;
 import com.grazy.modules.file.domain.GCloudUserFile;
 import com.grazy.modules.file.enums.DelFlagEnum;
 import com.grazy.modules.file.enums.FolderFlagEnum;
 import com.grazy.modules.file.mapper.GCloudUserFileMapper;
 import com.grazy.modules.file.service.GCloudUserFileService;
+import com.grazy.modules.file.vo.GCloudUserFileVO;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author gaofu
@@ -24,6 +28,10 @@ import java.util.Date;
 
 @Service(value = "GCloudUserFileService")
 public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper, GCloudUserFile> implements GCloudUserFileService {
+
+    @Resource
+    private GCloudUserFileMapper gCloudUserFileMapper;
+
 
     /**
      * 创建文件夹信息
@@ -52,6 +60,17 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
                 .eq(GCloudUserFile::getFolderFlag,FolderFlagEnum.YES.getCode())
                 .eq(GCloudUserFile::getParentId,FileConstants.TOP_PARENT_ID);
         return getOne(lambdaQueryWrapper);
+    }
+
+
+    /**
+     * 查询用户的文件列表
+     * @param queryFileListContext 查询列表上下文信息
+     * @return 文件列表数据Vo
+     */
+    @Override
+    public List<GCloudUserFileVO> getFileList(QueryFileListContext queryFileListContext) {
+        return gCloudUserFileMapper.selectFileList(queryFileListContext);
     }
 
 

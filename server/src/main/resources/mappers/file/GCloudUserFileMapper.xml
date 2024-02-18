@@ -5,19 +5,19 @@
 <mapper namespace="com.grazy.modules.file.mapper.GCloudUserFileMapper">
 
     <resultMap id="BaseResultMap" type="com.grazy.modules.file.domain.GCloudUserFile">
-            <id property="file_id" column="file_id" jdbcType="BIGINT"/>
-            <result property="user_id" column="user_id" jdbcType="BIGINT"/>
-            <result property="parent_id" column="parent_id" jdbcType="BIGINT"/>
-            <result property="real_file_id" column="real_file_id" jdbcType="BIGINT"/>
+            <id property="fileId" column="file_id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="parentId" column="parent_id" jdbcType="BIGINT"/>
+            <result property="realFileId" column="real_file_id" jdbcType="BIGINT"/>
             <result property="filename" column="filename" jdbcType="VARCHAR"/>
-            <result property="folder_flag" column="folder_flag" jdbcType="TINYINT"/>
-            <result property="file_size_desc" column="file_size_desc" jdbcType="VARCHAR"/>
-            <result property="file_type" column="file_type" jdbcType="TINYINT"/>
-            <result property="del_flag" column="del_flag" jdbcType="TINYINT"/>
-            <result property="create_user" column="create_user" jdbcType="BIGINT"/>
-            <result property="create_time" column="create_time" jdbcType="TIMESTAMP"/>
-            <result property="update_user" column="update_user" jdbcType="BIGINT"/>
-            <result property="update_time" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="folderFlag" column="folder_flag" jdbcType="TINYINT"/>
+            <result property="fileSizeDesc" column="file_size_desc" jdbcType="VARCHAR"/>
+            <result property="fileType" column="file_type" jdbcType="TINYINT"/>
+            <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
+            <result property="createUser" column="create_user" jdbcType="BIGINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateUser" column="update_user" jdbcType="BIGINT"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -27,4 +27,29 @@
         create_user,create_time,update_user,
         update_time
     </sql>
+
+
+    <select id="selectFileList" resultType="com.grazy.modules.file.vo.GCloudUserFileVO">
+        SELECT
+               file_id AS fileId,
+               parent_id AS parentId,
+               file_size_desc AS fileSizeDesc,
+               folder_flag AS folderFlag,
+               update_time AS updateTime,
+               filename
+        FROM
+            g_cloud_user_file
+        WHERE
+            user_id = #{queryFileParam.userId}
+            <if test="queryFileParam.parentId != null and queryFileParam.parentId != -1">
+                AND parent_id = #{queryFileParam.parentId}
+            </if>
+            <if test="queryFileParam.fileTypeArray != null">
+                AND file_type IN 
+                <foreach collection="queryFileParam.fileTypeArray" item="fileType" open="(" close=")" separator=",">
+                #{fileType}
+                </foreach>
+            </if>
+            AND del_flag = #{queryFileParam.delFlag}
+    </select>
 </mapper>
