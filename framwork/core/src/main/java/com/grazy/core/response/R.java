@@ -17,6 +17,8 @@ import java.io.Serializable;
 @Getter
 public class R<T> implements Serializable {
 
+    private static final long serialVersionUID = -5197917128359885562L;
+
     /**
      * 状态码
      */

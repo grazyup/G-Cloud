@@ -1,6 +1,5 @@
 package com.grazy.modules.file.context;
 
-import com.grazy.modules.file.domain.GCloudUserFile;
 import lombok.Data;
 
 import java.io.Serializable;

@@ -8,6 +8,7 @@ import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.file.constants.FileConstants;
 import com.grazy.modules.file.context.CreateFolderContext;
 import com.grazy.modules.file.context.QueryFileListContext;
+import com.grazy.modules.file.context.UpdateFilenameContext;
 import com.grazy.modules.file.domain.GCloudUserFile;
 import com.grazy.modules.file.enums.DelFlagEnum;
 import com.grazy.modules.file.enums.FolderFlagEnum;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author gaofu
@@ -65,6 +67,9 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
 
     /**
      * 查询用户的文件列表
+     * 1.如果用户的 parentId 为 -1，则是执行按照文件类型查询文件列表
+     * 2.parentId 存在具体值，则为查询的是当前文件夹中的文件列表
+     *
      * @param queryFileListContext 查询列表上下文信息
      * @return 文件列表数据Vo
      */
@@ -72,6 +77,23 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
     public List<GCloudUserFileVO> getFileList(QueryFileListContext queryFileListContext) {
         return gCloudUserFileMapper.selectFileList(queryFileListContext);
     }
+
+
+    /**
+     * 文件重命名
+     * 1.校验更新文件名的条件
+     * 2.执行文件重命名操作
+     *
+     * @param updateFilenameContext 重命名上下文信息
+     */
+    @Override
+    public void updateFilename(UpdateFilenameContext updateFilenameContext) {
+        checkUpdateFilenameCondition(updateFilenameContext);
+        doUpdateFilename(updateFilenameContext);
+    }
+
+
+
 
 
     /************************************* 通用创建用户文件/文件夹方法 *************************************/
@@ -190,6 +212,60 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
                 .eq(GCloudUserFile::getDelFlag, entity.getDelFlag())
                 .likeRight(GCloudUserFile::getFilename, newFilenameWithoutSuffix);
         return this.count(lambdaQueryWrapper);
+    }
+
+
+    /**
+     * 执行文件重命名操作
+     *
+     * @param context 重命名上下文信息
+     */
+    private void doUpdateFilename(UpdateFilenameContext context) {
+        GCloudUserFile entity = context.getEntity();
+        entity.setFilename(context.getNewFilename());
+        entity.setUpdateUser(context.getUserId());
+        entity.setUpdateTime(new Date());
+        if(!updateById(entity)){
+            throw new GCloudBusinessException("文件重命名失败！");
+        }
+    }
+
+
+    /**
+     * 校验更新文件名称的条件
+     * 1.文件ID是否合法
+     * 2.用户是否拥有权限修改
+     * 3.新的文件名称在同一父目录下的是否与兄弟文件名称存在一致
+     * 4.新旧文件名是否一致
+     *
+     * @param context 重命名上下文信息
+     */
+    private void checkUpdateFilenameCondition(UpdateFilenameContext context) {
+        Long fileId = context.getFileId();
+        GCloudUserFile gCloudUserFile = getById(fileId);
+
+        if (Objects.isNull(gCloudUserFile)) {
+            throw new GCloudBusinessException("错误的文件ID");
+        }
+
+        if (!Objects.equals(gCloudUserFile.getUserId(), context.getUserId())) {
+            throw new GCloudBusinessException("当前登录用户没有修改该文件名称的权限");
+        }
+
+        if (Objects.equals(gCloudUserFile.getFilename(), context.getNewFilename())) {
+            throw new GCloudBusinessException("不能与旧文件名一致");
+        }
+
+        LambdaQueryWrapper<GCloudUserFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(GCloudUserFile::getParentId, gCloudUserFile.getParentId())
+                .eq(GCloudUserFile::getFilename, context.getNewFilename())
+                .eq(GCloudUserFile::getDelFlag, DelFlagEnum.NO.getCode());
+        int count = count(lambdaQueryWrapper);
+        if (count > 0) {
+            throw new GCloudBusinessException("该文件名称已被占用");
+        }
+
+        context.setEntity(gCloudUserFile);
     }
 }
 
