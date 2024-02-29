@@ -3,11 +3,11 @@ package com.grazy.modules.file;
 import cn.hutool.core.lang.Assert;
 import com.grazy.GCloudServerLauncher;
 import com.grazy.core.exception.GCloudBusinessException;
-import com.grazy.modules.file.context.CreateFolderContext;
-import com.grazy.modules.file.context.DeleteFileContext;
-import com.grazy.modules.file.context.QueryFileListContext;
-import com.grazy.modules.file.context.UpdateFilenameContext;
+import com.grazy.core.utils.IdUtil;
+import com.grazy.modules.file.context.*;
+import com.grazy.modules.file.domain.GCloudFile;
 import com.grazy.modules.file.enums.DelFlagEnum;
+import com.grazy.modules.file.service.GCloudFileService;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.GCloudUserFileVO;
 import com.grazy.modules.user.context.UserLoginContext;
@@ -23,6 +23,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -41,6 +42,9 @@ public class fileTest {
 
     @Resource
     private GCloudUserFileService gCloudUserFileService;
+
+    @Resource
+    private GCloudFileService gCloudFileService;
 
 
     /**
@@ -292,5 +296,58 @@ public class fileTest {
         deleteFileContext.setFileIdList(fileIdList);
         deleteFileContext.setUserId(userId);
         gCloudUserFileService.deleteFile(deleteFileContext);
+    }
+
+
+    /**
+     * 测试文件秒传功能 -- 文件存在
+     */
+    @Test
+    public void testSecUploadByFileExit(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+
+        //创建文件
+        GCloudFile gCloudFile = new GCloudFile();
+        gCloudFile.setFileId(IdUtil.get());
+        gCloudFile.setFilename("filename");
+        gCloudFile.setFileSize("fileSize");
+        gCloudFile.setFileSizeDesc("fileSizeDesc");
+        gCloudFile.setCreateUser(userId);
+        gCloudFile.setFileSuffix("suffix");
+        gCloudFile.setFilePreviewContentType("");
+        gCloudFile.setIdentifier("Identifier");
+        gCloudFile.setRealPath("realPath");
+        gCloudFile.setCreateTime(new Date());
+        boolean save = gCloudFileService.save(gCloudFile);
+        Assert.isTrue(save);
+
+        SecUploadFileContext secUploadFileContext = new SecUploadFileContext();
+        secUploadFileContext.setFilename("filename.suffix");
+        secUploadFileContext.setIdentifier("Identifier");
+        secUploadFileContext.setUserId(userId);
+        secUploadFileContext.setParentId(info.getRootFileId());
+        boolean b = gCloudUserFileService.secUpload(secUploadFileContext);
+        Assert.isTrue(b);
+    }
+
+
+    /**
+     * 测试文件秒传功能 -- 文件不存在
+     */
+    @Test
+    public void testSecUploadByFileNoExit(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+
+        SecUploadFileContext secUploadFileContext = new SecUploadFileContext();
+        secUploadFileContext.setFilename("filename.suffix");
+        secUploadFileContext.setIdentifier("Identifier");
+        secUploadFileContext.setUserId(userId);
+        secUploadFileContext.setParentId(info.getRootFileId());
+        boolean b = gCloudUserFileService.secUpload(secUploadFileContext);
+        Assert.isFalse(b);
     }
 }

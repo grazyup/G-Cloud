@@ -6,14 +6,12 @@ import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.response.R;
 import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.file.constants.FileConstants;
-import com.grazy.modules.file.context.CreateFolderContext;
-import com.grazy.modules.file.context.DeleteFileContext;
-import com.grazy.modules.file.context.QueryFileListContext;
-import com.grazy.modules.file.context.UpdateFilenameContext;
+import com.grazy.modules.file.context.*;
 import com.grazy.modules.file.converter.FileConverter;
 import com.grazy.modules.file.enums.DelFlagEnum;
 import com.grazy.modules.file.po.CreateFolderPo;
 import com.grazy.modules.file.po.DeleteFilePo;
+import com.grazy.modules.file.po.SecUploadFilePo;
 import com.grazy.modules.file.po.UpdateFilenamePo;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.GCloudUserFileVO;
@@ -123,5 +121,22 @@ public class FileController {
         deleteFileContext.setFileIdList(fileIdList);
         userFileService.deleteFile(deleteFileContext);
         return R.success("SUCCESS");
+    }
+
+
+    @ApiOperation(
+            value = "文件秒传",
+            notes = "该接口提供了文件秒传的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("/file/sec-upload")
+    public R<String> secUpload(@Validated @RequestBody SecUploadFilePo secUploadFilePo){
+        SecUploadFileContext secUploadFileContext = fileConverter.SecUploadFilePoToSecUploadFileContext(secUploadFilePo);
+        boolean result = userFileService.secUpload(secUploadFileContext);
+        if(result){
+            return R.success("SUCCESS");
+        }
+        return R.fail("文件唯一标识不存在，请手动执行文件上传");
     }
 }

@@ -6,21 +6,23 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.grazy.common.event.file.DeleteFileEvent;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
+import com.grazy.core.utils.FileUtils;
 import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.file.constants.FileConstants;
-import com.grazy.modules.file.context.CreateFolderContext;
-import com.grazy.modules.file.context.DeleteFileContext;
-import com.grazy.modules.file.context.QueryFileListContext;
-import com.grazy.modules.file.context.UpdateFilenameContext;
+import com.grazy.modules.file.context.*;
+import com.grazy.modules.file.domain.GCloudFile;
 import com.grazy.modules.file.domain.GCloudUserFile;
 import com.grazy.modules.file.enums.DelFlagEnum;
+import com.grazy.modules.file.enums.FileTypeEnum;
 import com.grazy.modules.file.enums.FolderFlagEnum;
 import com.grazy.modules.file.mapper.GCloudUserFileMapper;
+import com.grazy.modules.file.service.GCloudFileService;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.GCloudUserFileVO;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -40,6 +42,9 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
 
     @Resource
     private GCloudUserFileMapper gCloudUserFileMapper;
+
+    @Resource
+    private GCloudFileService gCloudFileService;
 
     private ApplicationContext applicationContext;
 
@@ -119,6 +124,30 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         doDeleteFile(deleteFileContext);
         pushDeleteFileEvent(deleteFileContext);
     }
+
+
+    /**
+     * 文件秒传
+     * 1.通过文件的唯一标识，查找该用户对应的文件实体记录
+     * 2.不存在该记录，返回秒传失败
+     * 3.存在记录，直接挂载当前文件的关联关系，返回秒传成功
+     *
+     * @param context 文件秒传上下文信息
+     * @return 秒传结果
+     */
+    @Override
+    public boolean secUpload(SecUploadFileContext context) {
+        List<GCloudFile> dbFileList = getFileListByUserIdAndIdentifier(context.getIdentifier(),context.getUserId());
+        if(CollectionUtils.isEmpty(dbFileList)){
+            return false;
+        }
+        GCloudFile record = dbFileList.get(GCloudConstants.ZERO_INT);
+        saveUserFile(context.getUserId(),context.getParentId(),context.getFilename(),
+                record.getFileId(), record.getFileSizeDesc(), FolderFlagEnum.NO,
+                FileTypeEnum.getFileTypeCode(FileUtils.getFileSuffix(context.getFilename())));
+        return true;
+    }
+
 
 
 
@@ -356,6 +385,20 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         if(!Objects.equals(dbUserId, deleteFileContext.getUserId())){
             throw new GCloudBusinessException("当前登录用户没有删除该文件的权限");
         }
+    }
+
+
+    /**
+     * 根据唯一标识与用户ID查询已上传的文件记录
+     * @param identifier 文件的唯一标识
+     * @param userId 用户ID
+     * @return 文件实体集合
+     */
+    private List<GCloudFile> getFileListByUserIdAndIdentifier(String identifier, Long userId) {
+        LambdaQueryWrapper<GCloudFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(GCloudFile::getIdentifier,identifier)
+                .eq(GCloudFile::getCreateUser, userId);
+        return gCloudFileService.list(lambdaQueryWrapper);
     }
 }
 

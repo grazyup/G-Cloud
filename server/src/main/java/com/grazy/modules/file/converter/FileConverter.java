@@ -2,9 +2,11 @@ package com.grazy.modules.file.converter;
 
 import com.grazy.modules.file.context.CreateFolderContext;
 import com.grazy.modules.file.context.DeleteFileContext;
+import com.grazy.modules.file.context.SecUploadFileContext;
 import com.grazy.modules.file.context.UpdateFilenameContext;
 import com.grazy.modules.file.po.CreateFolderPo;
 import com.grazy.modules.file.po.DeleteFilePo;
+import com.grazy.modules.file.po.SecUploadFilePo;
 import com.grazy.modules.file.po.UpdateFilenamePo;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -48,4 +50,15 @@ public interface FileConverter {
      */
     @Mapping(target = "userId",expression = "java(com.grazy.common.utils.UserIdUtil.get())")
     DeleteFileContext DeleteFilePoToDeleteFileContext(DeleteFilePo deleteFilePo);
+
+
+    /**
+     * 控制层文件秒传类 转换为 业务层文件秒传类
+     *
+     * @param secUploadFilePo 控制层文件秒传类
+     * @return 业务层文件秒传类
+     */
+    @Mapping(target = "parentId",expression = "java(com.grazy.core.utils.IdUtil.decrypt(secUploadFilePo.getParentId()))")
+    @Mapping(target = "userId",expression = "java(com.grazy.common.utils.UserIdUtil.get())")
+    SecUploadFileContext SecUploadFilePoToSecUploadFileContext(SecUploadFilePo secUploadFilePo);
 }

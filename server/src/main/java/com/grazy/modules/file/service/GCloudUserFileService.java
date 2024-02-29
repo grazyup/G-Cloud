@@ -1,10 +1,7 @@
 package com.grazy.modules.file.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.grazy.modules.file.context.CreateFolderContext;
-import com.grazy.modules.file.context.DeleteFileContext;
-import com.grazy.modules.file.context.QueryFileListContext;
-import com.grazy.modules.file.context.UpdateFilenameContext;
+import com.grazy.modules.file.context.*;
 import com.grazy.modules.file.domain.GCloudUserFile;
 import com.grazy.modules.file.vo.GCloudUserFileVO;
 
@@ -57,4 +54,13 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @param deleteFileContext 文件删除上下文信息
      */
     void deleteFile(DeleteFileContext deleteFileContext);
+
+
+    /**
+     * 文件秒传
+     *
+     * @param secUploadFileContext 文件秒传上下文信息
+     * @return 秒传结果
+     */
+    boolean secUpload(SecUploadFileContext secUploadFileContext);
 }
