@@ -1,12 +1,15 @@
 package com.grazy.modules.file.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.grazy.common.event.file.DeleteFileEvent;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.file.constants.FileConstants;
 import com.grazy.modules.file.context.CreateFolderContext;
+import com.grazy.modules.file.context.DeleteFileContext;
 import com.grazy.modules.file.context.QueryFileListContext;
 import com.grazy.modules.file.context.UpdateFilenameContext;
 import com.grazy.modules.file.domain.GCloudUserFile;
@@ -15,12 +18,16 @@ import com.grazy.modules.file.enums.FolderFlagEnum;
 import com.grazy.modules.file.mapper.GCloudUserFileMapper;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.GCloudUserFileVO;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author gaofu
@@ -29,11 +36,16 @@ import java.util.Objects;
  */
 
 @Service(value = "GCloudUserFileService")
-public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper, GCloudUserFile> implements GCloudUserFileService {
+public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper, GCloudUserFile> implements GCloudUserFileService, ApplicationContextAware {
 
     @Resource
     private GCloudUserFileMapper gCloudUserFileMapper;
 
+    private ApplicationContext applicationContext;
+
+    public void setApplicationContext(ApplicationContext applicationContext){
+        this.applicationContext = applicationContext;
+    }
 
     /**
      * 创建文件夹信息
@@ -93,10 +105,23 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
     }
 
 
+    /**
+     * 批量删除文件
+     * 1.校验文件删除的条件
+     * 2.执行批量删除文件操作
+     * 3.发布批量删除文件事件，给其他模块订阅使用
+     *
+     * @param deleteFileContext 文件删除上下文信息
+     */
+    @Override
+    public void deleteFile(DeleteFileContext deleteFileContext) {
+        checkDeleteFileCondition(deleteFileContext);
+        doDeleteFile(deleteFileContext);
+        pushDeleteFileEvent(deleteFileContext);
+    }
 
 
 
-    /************************************* 通用创建用户文件/文件夹方法 *************************************/
 
     /**
      * 保存用户文件到数据库
@@ -266,6 +291,71 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         }
 
         context.setEntity(gCloudUserFile);
+    }
+
+
+    /**
+     * 对外发布文件删除的事件
+     *
+     * @param deleteFileContext 文件删除上下文信息
+     */
+    private void pushDeleteFileEvent(DeleteFileContext deleteFileContext) {
+        DeleteFileEvent deleteFileEvent = new DeleteFileEvent(this, deleteFileContext.getFileIdList());
+        applicationContext.publishEvent(deleteFileEvent);
+    }
+
+    /**
+     * 执行批量删除文件操作
+     *
+     * @param deleteFileContext 文件删除上下文信息
+     */
+    private void doDeleteFile(DeleteFileContext deleteFileContext) {
+        LambdaUpdateWrapper<GCloudUserFile> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        lambdaUpdateWrapper.in(GCloudUserFile::getFileId, deleteFileContext.getFileIdList())
+                .set(GCloudUserFile::getDelFlag, DelFlagEnum.YES.getCode())
+                .set(GCloudUserFile::getUpdateUser,deleteFileContext.getUserId())
+                .set(GCloudUserFile::getUpdateTime, new Date());
+        if(!update(lambdaUpdateWrapper)){
+            throw new GCloudBusinessException("文件删除失败");
+        }
+    }
+
+
+    /**
+     * 校验文件删除的条件
+     * 1.校验文件ID是否合法
+     * 2.校验用户是否有权限删除文件
+     *
+     * @param deleteFileContext 文件删除上下文信息
+     */
+    private void checkDeleteFileCondition(DeleteFileContext deleteFileContext) {
+        // 参数文件ID是否全部查询到数据库对应文件数据
+        List<Long> fileIdList = deleteFileContext.getFileIdList();
+        List<GCloudUserFile> dbUserFiles = listByIds(fileIdList);
+        if(dbUserFiles.size() != fileIdList.size()){
+            throw new GCloudBusinessException("存在不合法的文件记录");
+        }
+
+        // 判断参数文件ID与数据库文件ID数量是否一致
+        Set<Long> dbFileIdSet = dbUserFiles.stream().map(GCloudUserFile::getFileId).collect(Collectors.toSet());
+        int oldSize = dbFileIdSet.size();
+        dbFileIdSet.addAll(fileIdList);
+        int newSize = dbFileIdSet.size();
+        if(oldSize != newSize){
+            throw new GCloudBusinessException("存在不合法的文件记录");
+        }
+
+        // 判断查询出的文件数据是否都是一个用户的
+        Set<Long> dbUserIdSet = dbUserFiles.stream().map(GCloudUserFile::getUserId).collect(Collectors.toSet());
+        if(dbUserIdSet.size() != 1){
+            throw new GCloudBusinessException("存在不合法的文件记录");
+        }
+
+        // 判断用户ID与数据库查询的文件用户ID是否一致
+        Long dbUserId = dbUserIdSet.stream().findFirst().get();
+        if(!Objects.equals(dbUserId, deleteFileContext.getUserId())){
+            throw new GCloudBusinessException("当前登录用户没有删除该文件的权限");
+        }
     }
 }
 

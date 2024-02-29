@@ -4,6 +4,7 @@ import cn.hutool.core.lang.Assert;
 import com.grazy.GCloudServerLauncher;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.modules.file.context.CreateFolderContext;
+import com.grazy.modules.file.context.DeleteFileContext;
 import com.grazy.modules.file.context.QueryFileListContext;
 import com.grazy.modules.file.context.UpdateFilenameContext;
 import com.grazy.modules.file.enums.DelFlagEnum;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -222,4 +224,73 @@ public class fileTest {
         List<GCloudUserFileVO> fileList = gCloudUserFileService.getFileList(queryFileListContext);
     }
 
+
+    /**
+     * 测试文件删除 -- 错误的文件Id
+     */
+    @Test(expected = GCloudBusinessException.class)
+    public void testDeleteFileByErrorFileId(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+        //创建文件夹
+        CreateFolderContext createFolderContext = new CreateFolderContext();
+        createFolderContext.setFolderName("TestCreateFolderName");
+        createFolderContext.setUserId(userId);
+        createFolderContext.setParentId(info.getRootFileId());
+        Long fileId = gCloudUserFileService.createFolder(createFolderContext);
+
+        DeleteFileContext deleteFileContext = new DeleteFileContext();
+        List<Long> fileIdList = new ArrayList<>();
+        fileIdList.add(fileId + 1);
+        deleteFileContext.setFileIdList(fileIdList);
+        deleteFileContext.setUserId(userId);
+        gCloudUserFileService.deleteFile(deleteFileContext);
+    }
+
+    /**
+     * 测试文件删除 -- 错误的用户Id
+     */
+    @Test(expected = GCloudBusinessException.class)
+    public void testDeleteFileByErrorUserId(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+        //创建文件夹
+        CreateFolderContext createFolderContext = new CreateFolderContext();
+        createFolderContext.setFolderName("TestCreateFolderName");
+        createFolderContext.setUserId(userId);
+        createFolderContext.setParentId(info.getRootFileId());
+        Long fileId = gCloudUserFileService.createFolder(createFolderContext);
+
+        DeleteFileContext deleteFileContext = new DeleteFileContext();
+        List<Long> fileIdList = new ArrayList<>();
+        fileIdList.add(fileId);
+        deleteFileContext.setFileIdList(fileIdList);
+        deleteFileContext.setUserId(userId + 1);
+        gCloudUserFileService.deleteFile(deleteFileContext);
+    }
+
+    /**
+     * 测试文件删除 -- 成功
+     */
+    @Test
+    public void testDeleteFileSuccess(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+        //创建文件夹
+        CreateFolderContext createFolderContext = new CreateFolderContext();
+        createFolderContext.setFolderName("TestCreateFolderName");
+        createFolderContext.setUserId(userId);
+        createFolderContext.setParentId(info.getRootFileId());
+        Long fileId = gCloudUserFileService.createFolder(createFolderContext);
+
+        DeleteFileContext deleteFileContext = new DeleteFileContext();
+        List<Long> fileIdList = new ArrayList<>();
+        fileIdList.add(fileId);
+        deleteFileContext.setFileIdList(fileIdList);
+        deleteFileContext.setUserId(userId);
+        gCloudUserFileService.deleteFile(deleteFileContext);
+    }
 }

@@ -7,11 +7,13 @@ import com.grazy.core.response.R;
 import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.file.constants.FileConstants;
 import com.grazy.modules.file.context.CreateFolderContext;
+import com.grazy.modules.file.context.DeleteFileContext;
 import com.grazy.modules.file.context.QueryFileListContext;
 import com.grazy.modules.file.context.UpdateFilenameContext;
 import com.grazy.modules.file.converter.FileConverter;
 import com.grazy.modules.file.enums.DelFlagEnum;
 import com.grazy.modules.file.po.CreateFolderPo;
+import com.grazy.modules.file.po.DeleteFilePo;
 import com.grazy.modules.file.po.UpdateFilenamePo;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.GCloudUserFileVO;
@@ -51,7 +53,7 @@ public class FileController {
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @GetMapping("/file")
-    public R<List<GCloudUserFileVO>> list(@NotBlank(message = "父文件夹ID不能为空") @RequestParam(value = "parentId",required = true) String parentId,
+    public R<List<GCloudUserFileVO>> list(@NotBlank(message = "父文件夹ID不能为空") @RequestParam(value = "parentId",required = false) String parentId,
                                                   @RequestParam(value = "fileType",required = false,defaultValue = FileConstants.ALL_FILE_TYPE) String fileType){
         Long decryptParentId = -1L;
         List<Integer> fileTypeList = null;
@@ -60,7 +62,11 @@ public class FileController {
             decryptParentId = IdUtil.decrypt(parentId);
         }
         if(!Objects.equals(FileConstants.ALL_FILE_TYPE,fileType)){ //判断fileType文件类型是否为-1(-1表示全部文件类型)
-            fileTypeList = Splitter.on(GCloudConstants.COMMON_SEPARATOR).splitToList(fileType).stream().map(Integer::valueOf).collect(Collectors.toList());
+            fileTypeList = Splitter.on(GCloudConstants.COMMON_SEPARATOR)
+                    .splitToList(fileType)
+                    .stream()
+                    .map(Integer::valueOf)
+                    .collect(Collectors.toList());
         }
         QueryFileListContext queryFileListContext = new QueryFileListContext();
         queryFileListContext.setFileTypeArray(fileTypeList);
@@ -96,6 +102,26 @@ public class FileController {
     public R<String> updateFilename(@Validated @RequestBody UpdateFilenamePo updateFilenamePo){
         UpdateFilenameContext updateFilenameContext = fileConverter.UpdateFilenamePoToUpdateFilenameContext(updateFilenamePo);
         userFileService.updateFilename(updateFilenameContext);
+        return R.success("SUCCESS");
+    }
+
+
+    @ApiOperation(
+            value = "批量文件删除",
+            notes = "该接口提供了批量文件删除的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @DeleteMapping("/file")
+    public R<String> deleteFile(@Validated @RequestBody DeleteFilePo deleteFilePo){
+        DeleteFileContext deleteFileContext = fileConverter.DeleteFilePoToDeleteFileContext(deleteFilePo);
+        List<Long> fileIdList = Splitter.on(GCloudConstants.COMMON_SEPARATOR)
+                .splitToList(deleteFilePo.getFileIds())
+                .stream()
+                .map(IdUtil::decrypt)
+                .collect(Collectors.toList());
+        deleteFileContext.setFileIdList(fileIdList);
+        userFileService.deleteFile(deleteFileContext);
         return R.success("SUCCESS");
     }
 }
