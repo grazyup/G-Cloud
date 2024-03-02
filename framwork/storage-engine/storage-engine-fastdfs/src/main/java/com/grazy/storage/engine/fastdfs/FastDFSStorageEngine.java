@@ -1,7 +1,11 @@
 package com.grazy.storage.engine.fastdfs;
 
 import com.grazy.storage.engine.core.AbstractStorageEngine;
+import com.grazy.storage.engine.core.context.DeleteStorageFileContext;
+import com.grazy.storage.engine.core.context.StoreFileContext;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
 
 /**
  * @Author: grazy
@@ -12,4 +16,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class FastDFSStorageEngine extends AbstractStorageEngine {
 
+    @Override
+    protected void doStore(StoreFileContext context) throws IOException {
+
+    }
+
+    @Override
+    protected void doDelete(DeleteStorageFileContext context) throws IOException {
+
+    }
 }

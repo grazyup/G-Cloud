@@ -9,10 +9,7 @@ import com.grazy.modules.file.constants.FileConstants;
 import com.grazy.modules.file.context.*;
 import com.grazy.modules.file.converter.FileConverter;
 import com.grazy.modules.file.enums.DelFlagEnum;
-import com.grazy.modules.file.po.CreateFolderPo;
-import com.grazy.modules.file.po.DeleteFilePo;
-import com.grazy.modules.file.po.SecUploadFilePo;
-import com.grazy.modules.file.po.UpdateFilenamePo;
+import com.grazy.modules.file.po.*;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.GCloudUserFileVO;
 import io.swagger.annotations.Api;
@@ -138,5 +135,19 @@ public class FileController {
             return R.success("SUCCESS");
         }
         return R.fail("文件唯一标识不存在，请手动执行文件上传");
+    }
+
+
+    @ApiOperation(
+            value = "单文件上传",
+            notes = "该接口提供了单文件上传的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("/file/upload")
+    public R<String> upload(@Validated @RequestBody FileUploadPo fileUploadPo){
+        FileUploadContext fileUploadContext = fileConverter.FileUploadPoToFileUploadContext(fileUploadPo);
+        userFileService.upload(fileUploadContext);
+        return R.success();
     }
 }

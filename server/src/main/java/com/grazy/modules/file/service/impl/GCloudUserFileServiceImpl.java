@@ -10,6 +10,7 @@ import com.grazy.core.utils.FileUtils;
 import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.file.constants.FileConstants;
 import com.grazy.modules.file.context.*;
+import com.grazy.modules.file.converter.FileConverter;
 import com.grazy.modules.file.domain.GCloudFile;
 import com.grazy.modules.file.domain.GCloudUserFile;
 import com.grazy.modules.file.enums.DelFlagEnum;
@@ -22,6 +23,7 @@ import com.grazy.modules.file.vo.GCloudUserFileVO;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -43,8 +45,14 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
     @Resource
     private GCloudUserFileMapper gCloudUserFileMapper;
 
+
     @Resource
     private GCloudFileService gCloudFileService;
+
+
+    @Resource
+    private FileConverter fileConverter;
+
 
     private ApplicationContext applicationContext;
 
@@ -149,7 +157,33 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
     }
 
 
+    /**
+     * 单文件上传
+     * 1.上传文件并保存文件的实体记录
+     * 2.保存用户上传文件的关联关系记录
+     *
+     * @param context 文件上传上下文信息
+     */
+    @Override
+    @Transactional
+    public void upload(FileUploadContext context) {
+        saveFile(context);
+        this.saveUserFile(context.getUserId(), context.getParentId(), context.getFilename(),
+                context.getRecord().getFileId(), context.getRecord().getFileSizeDesc(),
+                FolderFlagEnum.NO, FileTypeEnum.getFileTypeCode(FileUtils.getFileSuffix(context.getFilename())));
+    }
 
+
+    /**
+     * 上传文件并保存文件的实体记录
+     *
+     * @param context 文件上传上下文信息
+     */
+    private void saveFile(FileUploadContext context) {
+        FileSaveContext fileSaveContext = fileConverter.FileUpLoadContextToFileSaveContext(context);
+        gCloudFileService.saveFile(fileSaveContext);
+        context.setRecord(fileSaveContext.getRecord());
+    }
 
 
     /**
@@ -333,8 +367,9 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         applicationContext.publishEvent(deleteFileEvent);
     }
 
+
     /**
-     * 执行批量删除文件操作
+     * 执行批量删除文件操作(放入回收站)
      *
      * @param deleteFileContext 文件删除上下文信息
      */

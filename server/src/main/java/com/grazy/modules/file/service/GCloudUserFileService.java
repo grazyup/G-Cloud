@@ -63,4 +63,12 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @return 秒传结果
      */
     boolean secUpload(SecUploadFileContext secUploadFileContext);
+
+
+    /**
+     * 单文件上传
+     *
+     * @param fileUploadContext 文件上传上下文信息
+     */
+    void upload(FileUploadContext fileUploadContext);
 }

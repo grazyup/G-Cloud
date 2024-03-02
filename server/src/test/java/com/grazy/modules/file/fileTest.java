@@ -17,11 +17,14 @@ import com.grazy.modules.user.vo.UserInfoVo;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -350,4 +353,52 @@ public class fileTest {
         boolean b = gCloudUserFileService.secUpload(secUploadFileContext);
         Assert.isFalse(b);
     }
+
+
+    /**
+     * 测试单文件上传 -- 成功
+     */
+    @Test
+    public void testUploadSuccess(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+
+        FileUploadContext context = new FileUploadContext();
+        MultipartFile file = generateMultipartFile();
+        context.setFile(file);
+        context.setIdentifier("123123");
+        context.setTotalSize(file.getSize());
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFilename(file.getOriginalFilename());
+        gCloudUserFileService.upload(context);
+
+        //查询文件是否存在
+        QueryFileListContext queryFileListContext = new QueryFileListContext();
+        queryFileListContext.setDelFlag(DelFlagEnum.NO.getCode());
+        queryFileListContext.setParentId(info.getRootFileId());
+        queryFileListContext.setUserId(userId);
+        List<GCloudUserFileVO> fileList = gCloudUserFileService.getFileList(queryFileListContext);
+        Assert.notEmpty(fileList);
+        Assert.isTrue(fileList.size() == 1);
+    }
+
+
+    /**
+     * 生成模拟的网络文件实体
+     *
+     * @return
+     */
+    private MultipartFile generateMultipartFile() {
+        MultipartFile file = null;
+        try {
+            file = new MockMultipartFile("file", "test.txt",
+                    "multipart/form-data", "this is test upload".getBytes(StandardCharsets.UTF_8));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return file;
+    }
+
 }

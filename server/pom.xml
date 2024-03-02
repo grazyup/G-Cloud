@@ -57,6 +57,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
+
+        <!--本地文件存储-->
+        <dependency>
+            <groupId>com.grazy</groupId>
+            <artifactId>G-Cloud-storage-engine-local</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
     <build>

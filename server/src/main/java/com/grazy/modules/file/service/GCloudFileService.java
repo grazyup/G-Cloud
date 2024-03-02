@@ -1,5 +1,6 @@
 package com.grazy.modules.file.service;
 
+import com.grazy.modules.file.context.FileSaveContext;
 import com.grazy.modules.file.domain.GCloudFile;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -10,4 +11,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface GCloudFileService extends IService<GCloudFile> {
 
+    /**
+     * 上传文件并保存文件的实体记录
+     *
+     * @param fileSaveContext 文件保存上下文信息
+     */
+    void saveFile(FileSaveContext fileSaveContext);
 }
