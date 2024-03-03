@@ -3,6 +3,7 @@ package com.grazy.modules.file.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.grazy.modules.file.context.*;
 import com.grazy.modules.file.domain.GCloudUserFile;
+import com.grazy.modules.file.vo.FileChunkUploadVO;
 import com.grazy.modules.file.vo.GCloudUserFileVO;
 
 import java.util.List;
@@ -71,4 +72,13 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @param fileUploadContext 文件上传上下文信息
      */
     void upload(FileUploadContext fileUploadContext);
+
+
+    /**
+     * 文件分片上传
+     *
+     * @param fileChunkUploadContext 文件分片上传信息
+     * @return 是否合并文件结果
+     */
+    FileChunkUploadVO chunkUpload(FileChunkUploadContext fileChunkUploadContext);
 }

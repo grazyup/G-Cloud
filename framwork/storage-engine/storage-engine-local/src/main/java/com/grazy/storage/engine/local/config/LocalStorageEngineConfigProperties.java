@@ -21,4 +21,10 @@ public class LocalStorageEngineConfigProperties {
      */
     private String rootFilePath = FileUtils.generateDefaultStoreRealFilePath();
 
+
+    /**
+     * 实际存放分片文件路径前缀
+     */
+    private String rootChunkFilePath = FileUtils.generateDefaultStoreRealChunkFilePath();
+
 }

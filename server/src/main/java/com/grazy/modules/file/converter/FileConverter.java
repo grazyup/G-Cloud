@@ -2,6 +2,7 @@ package com.grazy.modules.file.converter;
 
 import com.grazy.modules.file.context.*;
 import com.grazy.modules.file.po.*;
+import com.grazy.storage.engine.core.context.StoreChunkFileContext;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -75,4 +76,14 @@ public interface FileConverter {
      */
     @Mapping(target = "record",ignore = true)
     FileSaveContext FileUpLoadContextToFileSaveContext(FileUploadContext context);
+
+
+    @Mapping(target = "userId", expression = "java(com.grazy.common.utils.UserIdUtil.get())")
+    FileChunkUploadContext FileChunkUploadPoToFileChunkUploadContext(FileChunkUploadPo fileChunkUploadPo);
+
+
+    FileChunkSaveContext FileChunkUploadContextToFileChunkSaveContext(FileChunkUploadContext context);
+
+    @Mapping(target = "realPath", ignore = true)
+    StoreChunkFileContext FileChunkSaveContextToStoreChunkFileContext(FileChunkSaveContext context);
 }

@@ -17,8 +17,10 @@ import com.grazy.modules.file.enums.DelFlagEnum;
 import com.grazy.modules.file.enums.FileTypeEnum;
 import com.grazy.modules.file.enums.FolderFlagEnum;
 import com.grazy.modules.file.mapper.GCloudUserFileMapper;
+import com.grazy.modules.file.service.GCloudFileChunkService;
 import com.grazy.modules.file.service.GCloudFileService;
 import com.grazy.modules.file.service.GCloudUserFileService;
+import com.grazy.modules.file.vo.FileChunkUploadVO;
 import com.grazy.modules.file.vo.GCloudUserFileVO;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -52,6 +54,10 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
 
     @Resource
     private FileConverter fileConverter;
+
+
+    @Resource
+    private GCloudFileChunkService gCloudFileChunkService;
 
 
     private ApplicationContext applicationContext;
@@ -167,7 +173,9 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
     @Override
     @Transactional
     public void upload(FileUploadContext context) {
-        saveFile(context);
+        FileSaveContext fileSaveContext = fileConverter.FileUpLoadContextToFileSaveContext(context);
+        gCloudFileService.saveFile(fileSaveContext);
+        context.setRecord(fileSaveContext.getRecord());
         this.saveUserFile(context.getUserId(), context.getParentId(), context.getFilename(),
                 context.getRecord().getFileId(), context.getRecord().getFileSizeDesc(),
                 FolderFlagEnum.NO, FileTypeEnum.getFileTypeCode(FileUtils.getFileSuffix(context.getFilename())));
@@ -175,16 +183,24 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
 
 
     /**
-     * 上传文件并保存文件的实体记录
+     * 文件分片上传
+     * 1.上传分片文件以及保存分片记录到数据库
+     * 2.设置是否合并的响应参数
      *
-     * @param context 文件上传上下文信息
+     * @param context 文件分片上传信息
+     * @return
      */
-    private void saveFile(FileUploadContext context) {
-        FileSaveContext fileSaveContext = fileConverter.FileUpLoadContextToFileSaveContext(context);
-        gCloudFileService.saveFile(fileSaveContext);
-        context.setRecord(fileSaveContext.getRecord());
+    @Override
+    public FileChunkUploadVO chunkUpload(FileChunkUploadContext context) {
+        FileChunkSaveContext fileChunkSaveContext = fileConverter.FileChunkUploadContextToFileChunkSaveContext(context);
+        gCloudFileChunkService.saveChunkFile(fileChunkSaveContext);
+        FileChunkUploadVO fileChunkUploadVO = new FileChunkUploadVO();
+        fileChunkUploadVO.setMergeFlag(fileChunkSaveContext.getMergeFlagEnum().getCode());
+        return fileChunkUploadVO;
     }
 
+
+    /********************************************** private方法 **********************************************/
 
     /**
      * 保存用户文件到数据库

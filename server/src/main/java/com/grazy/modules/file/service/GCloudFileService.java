@@ -1,5 +1,6 @@
 package com.grazy.modules.file.service;
 
+import com.grazy.modules.file.context.FileChunkSaveContext;
 import com.grazy.modules.file.context.FileSaveContext;
 import com.grazy.modules.file.domain.GCloudFile;
 import com.baomidou.mybatisplus.extension.service.IService;

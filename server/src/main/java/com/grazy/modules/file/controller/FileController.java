@@ -11,6 +11,7 @@ import com.grazy.modules.file.converter.FileConverter;
 import com.grazy.modules.file.enums.DelFlagEnum;
 import com.grazy.modules.file.po.*;
 import com.grazy.modules.file.service.GCloudUserFileService;
+import com.grazy.modules.file.vo.FileChunkUploadVO;
 import com.grazy.modules.file.vo.GCloudUserFileVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -124,7 +125,7 @@ public class FileController {
     @ApiOperation(
             value = "文件秒传",
             notes = "该接口提供了文件秒传的功能",
-            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @PostMapping("/file/sec-upload")
@@ -141,7 +142,7 @@ public class FileController {
     @ApiOperation(
             value = "单文件上传",
             notes = "该接口提供了单文件上传的功能",
-            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @PostMapping("/file/upload")
@@ -149,5 +150,19 @@ public class FileController {
         FileUploadContext fileUploadContext = fileConverter.FileUploadPoToFileUploadContext(fileUploadPo);
         userFileService.upload(fileUploadContext);
         return R.success();
+    }
+
+
+    @ApiOperation(
+            value = "文件分片上传",
+            notes = "该接口提供了文件分片上传的功能",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("/file/chunk-upload")
+    public R<FileChunkUploadVO> chunkUpload(@Validated @RequestBody FileChunkUploadPo fileChunkUploadPo) {
+        FileChunkUploadContext fileChunkUploadContext = fileConverter.FileChunkUploadPoToFileChunkUploadContext(fileChunkUploadPo);
+        FileChunkUploadVO fileChunkUploadVO = userFileService.chunkUpload(fileChunkUploadContext);
+        return R.data(fileChunkUploadVO);
     }
 }

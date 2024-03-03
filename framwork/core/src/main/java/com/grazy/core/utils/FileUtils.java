@@ -78,6 +78,7 @@ public class FileUtils {
                 .append(DateUtil.thisMonth() + 1)
                 .append(File.separator)
                 .append(DateUtil.thisDayOfMonth())
+                .append(File.separator)
                 .append(UUIDUtil.getUUID())
                 .append(getFileSuffix(filename))
                 .toString();
@@ -119,7 +120,7 @@ public class FileUtils {
 
 
     /**
-     * 生成基本文件存储路径
+     * 生成默认文件存储路径前缀
      * 生成规则： 当前登录用户的文件目录 + GCloud
      * @return
      */
@@ -127,6 +128,48 @@ public class FileUtils {
         return new StringBuffer(System.getProperty("user.home"))
                 .append(File.separator)
                 .append("GCloud")
+                .toString();
+    }
+
+
+    /**
+     * 生成默认分片文件存储路径前缀
+     * 生成规则： 当前登录用户的文件目录 + GCloud + chunks
+     *
+     * @return
+     */
+    public static String generateDefaultStoreRealChunkFilePath() {
+        return new StringBuffer(System.getProperty("user.home"))
+                .append(File.separator)
+                .append("GCloud")
+                .append(File.separator)
+                .append("chunks")
+                .toString();
+    }
+
+
+    /**
+     * 构建完整的分片文件存储路径
+     * 生成规则: 基础路径 + 年月日 + 文件的唯一标识 +随机的文件名称 +  __,__ + 文件分片的下标
+     * @param basePath
+     * @param identifier
+     * @param chunkNumber
+     * @return
+     */
+    public static String generateStoreRealChunkFilePath(String basePath, String identifier, Integer chunkNumber) {
+        return new StringBuffer(basePath)
+                .append(File.separator)
+                .append(DateUtil.thisYear())
+                .append(File.separator)
+                .append(DateUtil.thisMonth() + 1)
+                .append(File.separator)
+                .append(DateUtil.thisDayOfMonth())
+                .append(File.separator)
+                .append(identifier)
+                .append(File.separator)
+                .append(UUIDUtil.getUUID())
+                .append(GCloudConstants.COMMON_SEPARATOR)
+                .append(chunkNumber)
                 .toString();
     }
 }

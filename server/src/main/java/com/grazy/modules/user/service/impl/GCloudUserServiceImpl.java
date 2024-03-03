@@ -194,6 +194,10 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
     }
 
 
+
+
+    /********************************************** private方法 **********************************************/
+
     /**
      * 创建注册用户的根目录
      *

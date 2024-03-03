@@ -1,5 +1,6 @@
 package com.grazy.modules.file.service;
 
+import com.grazy.modules.file.context.FileChunkSaveContext;
 import com.grazy.modules.file.domain.GCloudFileChunk;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -10,4 +11,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface GCloudFileChunkService extends IService<GCloudFileChunk> {
 
+    /**
+     * 保存分片文件并保存已上传分片的记录
+     *
+     * @param fileChunkSaveContext 保存分片文件信息
+     */
+    void saveChunkFile(FileChunkSaveContext fileChunkSaveContext);
 }

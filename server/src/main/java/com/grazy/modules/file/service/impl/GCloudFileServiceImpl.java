@@ -55,8 +55,10 @@ public class GCloudFileServiceImpl extends ServiceImpl<GCloudFileMapper, GCloudF
     }
 
 
+    /********************************************** private方法 **********************************************/
+
     /**
-     * 单文件上传
+     * 上传单文件
      * 该方法委托文件存储引擎实现
      *
      * @param context
