@@ -3,7 +3,7 @@ package com.grazy.modules.file.mapper;
 import com.grazy.modules.file.context.QueryFileListContext;
 import com.grazy.modules.file.domain.GCloudUserFile;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.grazy.modules.file.vo.GCloudUserFileVO;
+import com.grazy.modules.file.vo.UserFileVO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -21,7 +21,7 @@ public interface GCloudUserFileMapper extends BaseMapper<GCloudUserFile> {
      * @param queryFileListContext 查询文件列表上下文
      * @return 列表集合
      */
-    List<GCloudUserFileVO> selectFileList(@Param("queryFileParam") QueryFileListContext queryFileListContext);
+    List<UserFileVO> selectFileList(@Param("queryFileParam") QueryFileListContext queryFileListContext);
 }
 
 

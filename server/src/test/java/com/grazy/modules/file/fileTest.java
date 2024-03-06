@@ -1,15 +1,19 @@
 package com.grazy.modules.file;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Assert;
 import com.grazy.GCloudServerLauncher;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.file.context.*;
 import com.grazy.modules.file.domain.GCloudFile;
+import com.grazy.modules.file.domain.GCloudFileChunk;
 import com.grazy.modules.file.enums.DelFlagEnum;
+import com.grazy.modules.file.service.GCloudFileChunkService;
 import com.grazy.modules.file.service.GCloudFileService;
 import com.grazy.modules.file.service.GCloudUserFileService;
-import com.grazy.modules.file.vo.GCloudUserFileVO;
+import com.grazy.modules.file.vo.UploadChunksVo;
+import com.grazy.modules.file.vo.UserFileVO;
 import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.service.GCloudUserService;
@@ -48,6 +52,9 @@ public class fileTest {
 
     @Resource
     private GCloudFileService gCloudFileService;
+
+    @Resource
+    private GCloudFileChunkService gCloudFileChunkService;
 
 
     /**
@@ -91,7 +98,7 @@ public class fileTest {
         queryFileListContext.setParentId(info.getRootFileId());
         queryFileListContext.setDelFlag(DelFlagEnum.NO.getCode());
         queryFileListContext.setFileTypeArray(null);
-        List<GCloudUserFileVO> fileList = gCloudUserFileService.getFileList(queryFileListContext);
+        List<UserFileVO> fileList = gCloudUserFileService.getFileList(queryFileListContext);
 
         Assert.isTrue(CollectionUtils.isEmpty(fileList));
     }
@@ -228,7 +235,7 @@ public class fileTest {
         queryFileListContext.setParentId(info.getRootFileId());
         queryFileListContext.setDelFlag(DelFlagEnum.NO.getCode());
         queryFileListContext.setFileTypeArray(null);
-        List<GCloudUserFileVO> fileList = gCloudUserFileService.getFileList(queryFileListContext);
+        List<UserFileVO> fileList = gCloudUserFileService.getFileList(queryFileListContext);
     }
 
 
@@ -379,7 +386,7 @@ public class fileTest {
         queryFileListContext.setDelFlag(DelFlagEnum.NO.getCode());
         queryFileListContext.setParentId(info.getRootFileId());
         queryFileListContext.setUserId(userId);
-        List<GCloudUserFileVO> fileList = gCloudUserFileService.getFileList(queryFileListContext);
+        List<UserFileVO> fileList = gCloudUserFileService.getFileList(queryFileListContext);
         Assert.notEmpty(fileList);
         Assert.isTrue(fileList.size() == 1);
     }
@@ -401,4 +408,33 @@ public class fileTest {
         return file;
     }
 
+
+    /**
+     * 测试查询用户已上传的分片信息列表 -- 成功
+     */
+    @Test
+    public void testQueryUploadedChunksSuccess(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+
+        //生成并保存分片记录
+        GCloudFileChunk record = new GCloudFileChunk();
+        record.setId(IdUtil.get());
+        record.setIdentifier("identifier");
+        record.setRealPath("realPath");
+        record.setChunkNumber(1);
+        record.setExpirationTime(DateUtil.offsetDay(new Date(), 1));
+        record.setCreateUser(userId);
+        record.setCreateTime(new Date());
+        boolean save = gCloudFileChunkService.save(record);
+        Assert.isTrue(save);
+
+        //查询已上传分片信息列表
+        QueryUploadChunkContext queryUploadChunkContext = new QueryUploadChunkContext();
+        queryUploadChunkContext.setIdentifier("identifier");
+        queryUploadChunkContext.setUserId(userId);
+        UploadChunksVo uploadedChunks = gCloudUserFileService.getUploadedChunks(queryUploadChunkContext);
+        Assert.notNull(uploadedChunks);
+        Assert.notEmpty(uploadedChunks.getUploadedChunks());
+    }
 }

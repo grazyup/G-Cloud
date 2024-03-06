@@ -29,7 +29,7 @@
     </sql>
 
 
-    <select id="selectFileList" resultType="com.grazy.modules.file.vo.GCloudUserFileVO">
+    <select id="selectFileList" resultType="com.grazy.modules.file.vo.UserFileVO">
         SELECT
                file_id AS fileId,
                parent_id AS parentId,

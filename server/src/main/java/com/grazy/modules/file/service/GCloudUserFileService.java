@@ -4,7 +4,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.grazy.modules.file.context.*;
 import com.grazy.modules.file.domain.GCloudUserFile;
 import com.grazy.modules.file.vo.FileChunkUploadVO;
-import com.grazy.modules.file.vo.GCloudUserFileVO;
+import com.grazy.modules.file.vo.UploadChunksVo;
+import com.grazy.modules.file.vo.UserFileVO;
 
 import java.util.List;
 
@@ -38,7 +39,7 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @param queryFileListContext 查询列表上下文信息
      * @return 文件列表数据Vo
      */
-    List<GCloudUserFileVO> getFileList(QueryFileListContext queryFileListContext);
+    List<UserFileVO> getFileList(QueryFileListContext queryFileListContext);
 
 
     /**
@@ -81,4 +82,13 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @return 是否合并文件结果
      */
     FileChunkUploadVO chunkUpload(FileChunkUploadContext fileChunkUploadContext);
+
+
+    /**
+     * 获取已上传的分片文件
+     *
+     * @param context 文件唯一标识
+     * @return 已上传的分片文件编号列表Vo
+     */
+    UploadChunksVo getUploadedChunks(QueryUploadChunkContext context);
 }

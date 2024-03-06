@@ -12,6 +12,7 @@ import com.grazy.modules.file.constants.FileConstants;
 import com.grazy.modules.file.context.*;
 import com.grazy.modules.file.converter.FileConverter;
 import com.grazy.modules.file.domain.GCloudFile;
+import com.grazy.modules.file.domain.GCloudFileChunk;
 import com.grazy.modules.file.domain.GCloudUserFile;
 import com.grazy.modules.file.enums.DelFlagEnum;
 import com.grazy.modules.file.enums.FileTypeEnum;
@@ -21,7 +22,8 @@ import com.grazy.modules.file.service.GCloudFileChunkService;
 import com.grazy.modules.file.service.GCloudFileService;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.FileChunkUploadVO;
-import com.grazy.modules.file.vo.GCloudUserFileVO;
+import com.grazy.modules.file.vo.UploadChunksVo;
+import com.grazy.modules.file.vo.UserFileVO;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
@@ -105,7 +107,7 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
      * @return 文件列表数据Vo
      */
     @Override
-    public List<GCloudUserFileVO> getFileList(QueryFileListContext queryFileListContext) {
+    public List<UserFileVO> getFileList(QueryFileListContext queryFileListContext) {
         return gCloudUserFileMapper.selectFileList(queryFileListContext);
     }
 
@@ -198,6 +200,28 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         fileChunkUploadVO.setMergeFlag(fileChunkSaveContext.getMergeFlagEnum().getCode());
         return fileChunkUploadVO;
     }
+
+
+    /**
+     * 获取已上传的分片文件
+     *
+     * @param context 文件唯一标识
+     * @return 已上传的分片文件编号列表Vo
+     */
+    @Override
+    public UploadChunksVo getUploadedChunks(QueryUploadChunkContext context) {
+        LambdaQueryWrapper<GCloudFileChunk> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.select(GCloudFileChunk::getChunkNumber);  //指定一个字段，如有多个只查询第一个
+        lambdaQueryWrapper.eq(GCloudFileChunk::getIdentifier,context.getIdentifier())
+                .eq(GCloudFileChunk::getCreateUser,context.getUserId())
+                .gt(GCloudFileChunk::getExpirationTime, new Date());
+        //该方法只查询指定的一个字段并返回
+        List<Integer> chunkNumberList = gCloudFileChunkService.listObjs(lambdaQueryWrapper, value -> (Integer) value);
+        UploadChunksVo uploadChunksVo = new UploadChunksVo();
+        uploadChunksVo.setUploadedChunks(chunkNumberList);
+        return uploadChunksVo;
+    }
+
 
 
     /********************************************** private方法 **********************************************/

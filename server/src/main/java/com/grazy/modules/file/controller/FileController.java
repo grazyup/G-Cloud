@@ -12,7 +12,8 @@ import com.grazy.modules.file.enums.DelFlagEnum;
 import com.grazy.modules.file.po.*;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.FileChunkUploadVO;
-import com.grazy.modules.file.vo.GCloudUserFileVO;
+import com.grazy.modules.file.vo.UserFileVO;
+import com.grazy.modules.file.vo.UploadChunksVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
@@ -49,8 +50,8 @@ public class FileController {
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @GetMapping("/file")
-    public R<List<GCloudUserFileVO>> list(@NotBlank(message = "父文件夹ID不能为空") @RequestParam(value = "parentId",required = false) String parentId,
-                                                  @RequestParam(value = "fileType",required = false,defaultValue = FileConstants.ALL_FILE_TYPE) String fileType){
+    public R<List<UserFileVO>> list(@NotBlank(message = "父文件夹ID不能为空") @RequestParam(value = "parentId",required = false) String parentId,
+                                    @RequestParam(value = "fileType",required = false,defaultValue = FileConstants.ALL_FILE_TYPE) String fileType){
         Long decryptParentId = -1L;
         List<Integer> fileTypeList = null;
         if(!FileConstants.NO_DETAIL_FOLDER.equals(parentId)){ //判断parentId是否为-1（-1表示不是具体文件夹）
@@ -69,7 +70,7 @@ public class FileController {
         queryFileListContext.setDelFlag(DelFlagEnum.NO.getCode());
         queryFileListContext.setUserId(UserIdUtil.get());
         queryFileListContext.setParentId(decryptParentId);
-        List<GCloudUserFileVO> result = userFileService.getFileList(queryFileListContext);
+        List<UserFileVO> result = userFileService.getFileList(queryFileListContext);
         return R.data(result);
     }
 
@@ -164,5 +165,19 @@ public class FileController {
         FileChunkUploadContext fileChunkUploadContext = fileConverter.FileChunkUploadPoToFileChunkUploadContext(fileChunkUploadPo);
         FileChunkUploadVO fileChunkUploadVO = userFileService.chunkUpload(fileChunkUploadContext);
         return R.data(fileChunkUploadVO);
+    }
+
+
+    @ApiOperation(
+            value = "查询已经上传的文件分片列表",
+            notes = "该接口提供了查询已经上传的文件分片列表的功能",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("/file/chunk-upload")
+    public R<UploadChunksVo> getUploadChunks(@Validated @RequestBody QueryUploadChunkPo queryUploadChunkPo){
+        QueryUploadChunkContext context = fileConverter.QueryUploadChunkPoToQueryUploadChunkContext(queryUploadChunkPo);
+        UploadChunksVo uploadChunksVo = userFileService.getUploadedChunks(context);
+        return R.data(uploadChunksVo);
     }
 }

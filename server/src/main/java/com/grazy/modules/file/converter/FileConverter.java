@@ -84,6 +84,11 @@ public interface FileConverter {
 
     FileChunkSaveContext FileChunkUploadContextToFileChunkSaveContext(FileChunkUploadContext context);
 
+
     @Mapping(target = "realPath", ignore = true)
     StoreChunkFileContext FileChunkSaveContextToStoreChunkFileContext(FileChunkSaveContext context);
+
+
+    @Mapping(target = "userId", expression = "java(com.grazy.common.utils.UserIdUtil.get())")
+    QueryUploadChunkContext QueryUploadChunkPoToQueryUploadChunkContext(QueryUploadChunkPo queryUploadChunkPo);
 }

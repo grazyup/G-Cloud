@@ -13,12 +13,12 @@ import java.util.Date;
 /**
  * @Author: grazy
  * @Date: 2024-02-18 9:55
- * @Description: 服务器返回前端文件实体类
+ * @Description: 服务器返回前端 文件实体类
  */
 
 @ApiModel(value = "用户搜索文件列表相应实体")
 @Data
-public class GCloudUserFileVO implements Serializable {
+public class UserFileVO implements Serializable {
 
     private static final long serialVersionUID = 1585400761787981051L;
 
