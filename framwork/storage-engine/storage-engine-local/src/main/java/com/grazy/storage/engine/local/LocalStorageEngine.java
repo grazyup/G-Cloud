@@ -3,6 +3,7 @@ package com.grazy.storage.engine.local;
 import com.grazy.core.utils.FileUtils;
 import com.grazy.storage.engine.core.AbstractStorageEngine;
 import com.grazy.storage.engine.core.context.DeleteStorageFileContext;
+import com.grazy.storage.engine.core.context.MergeFileContext;
 import com.grazy.storage.engine.core.context.StoreChunkFileContext;
 import com.grazy.storage.engine.core.context.StoreFileContext;
 import com.grazy.storage.engine.local.config.LocalStorageEngineConfigProperties;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * @Author: grazy
@@ -60,9 +63,31 @@ public class LocalStorageEngine extends AbstractStorageEngine {
      */
     @Override
     protected void doStoreChunkFile(StoreChunkFileContext context) throws IOException {
-        String basePath = localStorageEngineConfigProperties.getRootFilePath();
+        String basePath = localStorageEngineConfigProperties.getRootChunkFilePath();
         String realFilePath = FileUtils.generateStoreRealChunkFilePath(basePath, context.getIdentifier(), context.getChunkNumber());
         FileUtils.writeStreamToFile(context.getInputStream(), context.getTotalSize(), new File(realFilePath));
+        context.setRealPath(realFilePath);
+    }
+
+
+    /**
+     * 合并分片文件
+     *
+     * @param context
+     * @throws IOException
+     */
+    @Override
+    protected void doMergeFile(MergeFileContext context) throws IOException {
+        String basePath = localStorageEngineConfigProperties.getRootFilePath();
+        String realFilePath = FileUtils.generateStoreRealFilePath(basePath,context.getFilename());
+        FileUtils.createFile(new File(realFilePath));
+        List<String> realPathList = context.getRealPathList();
+        //文件追加读写
+        for(String el: realPathList){
+            FileUtils.appendWrite(Paths.get(realFilePath), new File(el).toPath());
+        }
+        //删除分片文件
+        FileUtils.deleteFiles(realPathList);
         context.setRealPath(realFilePath);
     }
 }

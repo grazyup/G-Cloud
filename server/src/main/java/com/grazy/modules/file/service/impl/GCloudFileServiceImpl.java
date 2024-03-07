@@ -1,25 +1,34 @@
 package com.grazy.modules.file.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.grazy.common.event.log.ErrorLogEvent;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.utils.FileUtils;
 import com.grazy.core.utils.IdUtil;
+import com.grazy.modules.file.context.FileChunkMergeAndSaveContext;
 import com.grazy.modules.file.context.FileSaveContext;
 import com.grazy.modules.file.domain.GCloudFile;
+import com.grazy.modules.file.domain.GCloudFileChunk;
 import com.grazy.modules.file.mapper.GCloudFileMapper;
+import com.grazy.modules.file.service.GCloudFileChunkService;
 import com.grazy.modules.file.service.GCloudFileService;
 import com.grazy.storage.engine.core.StorageEngine;
 import com.grazy.storage.engine.core.context.DeleteStorageFileContext;
+import com.grazy.storage.engine.core.context.MergeFileContext;
 import com.grazy.storage.engine.core.context.StoreFileContext;
 import org.assertj.core.util.Lists;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
 * @author gaofu
@@ -31,6 +40,9 @@ public class GCloudFileServiceImpl extends ServiceImpl<GCloudFileMapper, GCloudF
 
     @Resource
     private StorageEngine storageEngine;
+
+    @Resource
+    private GCloudFileChunkService gCloudFileChunkService;
 
     private ApplicationContext applicationContext;
 
@@ -53,6 +65,23 @@ public class GCloudFileServiceImpl extends ServiceImpl<GCloudFileMapper, GCloudF
                 context.getTotalSize(), context.getUserId());
         context.setRecord(gCloudFile);
     }
+
+
+    /**
+     * 合并文件并保存文件的实体记录
+     * 1.合并文件
+     * 2.保存文件记录
+     *
+     * @param context 上下文参数
+     */
+    @Override
+    public void mergeFileChunkAndSaveFileRecord(FileChunkMergeAndSaveContext context) {
+        doMergeFileChunk(context);
+        GCloudFile gCloudFile = doSaveFileRecord(context.getFilename(), context.getIdentifier(), context.getRealPath(),
+                context.getTotalSize(), context.getUserId());
+        context.setRecord(gCloudFile);
+    }
+
 
 
     /********************************************** private方法 **********************************************/
@@ -130,6 +159,47 @@ public class GCloudFileServiceImpl extends ServiceImpl<GCloudFileMapper, GCloudF
         gCloudFile.setFileSizeDesc(FileUtils.byteCountToDisplaySize(totalSize));
         gCloudFile.setCreateTime(new Date());
         return gCloudFile;
+    }
+
+
+
+    /**
+     * 合并分片文件（该方法委托文件存储引擎实现）
+     * 1.查询分片记录
+     * 2.执行合并分片操作
+     * 3.删除数据库中分片记录
+     * 4.封装合并后的真实存储路径到context中
+     *
+     * @param context
+     */
+    private void doMergeFileChunk(FileChunkMergeAndSaveContext context) {
+        LambdaQueryWrapper<GCloudFileChunk> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(GCloudFileChunk::getIdentifier, context.getIdentifier())
+                .eq(GCloudFileChunk::getCreateUser, context.getUserId())
+                .ge(GCloudFileChunk::getExpirationTime, new Date());
+        List<GCloudFileChunk> fileChunkList = gCloudFileChunkService.list(lambdaQueryWrapper);
+        if(CollectionUtils.isEmpty(fileChunkList)){
+            throw new GCloudBusinessException("该文件未找到分片记录");
+        }
+        List<String> realPathList = fileChunkList.stream()
+                .sorted(Comparator.comparingInt(GCloudFileChunk::getChunkNumber))
+                .map(GCloudFileChunk::getRealPath)
+                .collect(Collectors.toList());
+
+        try{
+            MergeFileContext mergeFileContext = new MergeFileContext();
+            mergeFileContext.setFilename(context.getFilename());
+            mergeFileContext.setIdentifier(context.getIdentifier());
+            mergeFileContext.setRealPathList(realPathList);
+            mergeFileContext.setUserId(context.getUserId());
+            storageEngine.mergeFile(mergeFileContext);
+        }catch (IOException e){
+            e.printStackTrace();
+            throw new GCloudBusinessException("分片文件合并失败");
+        }
+
+        List<Long> chunkIdList = fileChunkList.stream().map(GCloudFileChunk::getId).collect(Collectors.toList());
+        gCloudFileChunkService.removeByIds(chunkIdList);
     }
 
 

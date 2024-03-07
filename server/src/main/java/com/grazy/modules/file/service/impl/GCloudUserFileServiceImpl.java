@@ -223,6 +223,22 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
     }
 
 
+    /**
+     * 合并分片文件
+     * 1.合并文件并保存文件的实体记录
+     * 2.保存用户上传文件的关联关系记录
+     *
+     * @param context 合并分片文件上下文信息
+     */
+    @Override
+    public void mergeFile(FileChunkMergeContext context) {
+        mergeFileChunkAndSaveFileRecord(context);
+        this.saveUserFile(context.getUserId(),context.getParentId(),context.getFilename(),
+                context.getRecord().getFileId(),context.getRecord().getFileSizeDesc(),
+                FolderFlagEnum.NO,FileTypeEnum.getFileTypeCode(FileUtils.getFileSuffix(context.getFilename())));
+    }
+
+
 
     /********************************************** private方法 **********************************************/
 
@@ -474,6 +490,18 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         lambdaQueryWrapper.eq(GCloudFile::getIdentifier,identifier)
                 .eq(GCloudFile::getCreateUser, userId);
         return gCloudFileService.list(lambdaQueryWrapper);
+    }
+
+
+    /**
+     * 合并文件并保存文件的实体记录
+     *
+     * @param context
+     */
+    private void mergeFileChunkAndSaveFileRecord(FileChunkMergeContext context) {
+        FileChunkMergeAndSaveContext fileChunkMergeAndSaveContext = fileConverter.FileChunkMergeContextToFileChunkMergeAndSaveContext(context);
+        gCloudFileService.mergeFileChunkAndSaveFileRecord(fileChunkMergeAndSaveContext);
+        context.setRecord(fileChunkMergeAndSaveContext.getRecord());
     }
 }
 

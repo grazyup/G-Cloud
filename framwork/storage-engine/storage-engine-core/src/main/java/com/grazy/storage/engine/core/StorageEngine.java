@@ -1,6 +1,7 @@
 package com.grazy.storage.engine.core;
 
 import com.grazy.storage.engine.core.context.DeleteStorageFileContext;
+import com.grazy.storage.engine.core.context.MergeFileContext;
 import com.grazy.storage.engine.core.context.StoreChunkFileContext;
 import com.grazy.storage.engine.core.context.StoreFileContext;
 
@@ -36,8 +37,18 @@ public interface StorageEngine {
 
     /**
      *  存储物理分片文件
+     *
      * @param context
      * @throws IOException
      */
     void storeChunkFile(StoreChunkFileContext context) throws IOException;
+
+
+    /**
+     * 合并分片文件
+     *
+     * @param context
+     * @throws IOException
+     */
+    void mergeFile(MergeFileContext context) throws IOException;
 }

@@ -91,4 +91,11 @@ public interface FileConverter {
 
     @Mapping(target = "userId", expression = "java(com.grazy.common.utils.UserIdUtil.get())")
     QueryUploadChunkContext QueryUploadChunkPoToQueryUploadChunkContext(QueryUploadChunkPo queryUploadChunkPo);
+
+
+    @Mapping(target = "userId", expression = "java(com.grazy.common.utils.UserIdUtil.get())")
+    FileChunkMergeContext FileChunkMergePoToFileChunkMergeContext(FileChunkMergePo fileChunkMergePo);
+
+
+    FileChunkMergeAndSaveContext FileChunkMergeContextToFileChunkMergeAndSaveContext(FileChunkMergeContext context);
 }

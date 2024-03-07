@@ -91,4 +91,12 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @return 已上传的分片文件编号列表Vo
      */
     UploadChunksVo getUploadedChunks(QueryUploadChunkContext context);
+
+
+    /**
+     * 合并分片文件
+     *
+     * @param fileChunkMergeContext 合并分片文件上下文信息
+     */
+    void mergeFile(FileChunkMergeContext fileChunkMergeContext);
 }

@@ -90,7 +90,7 @@ public class UserController {
     )
     @LoginIgnore
     @PostMapping("/username/check")
-    public R<String> checkUsername(@Validated @RequestBody CheckUsernamePO checkUsernamePO){
+    public R<String> checkUsername(@Validated @RequestBody CheckUsernamePo checkUsernamePO){
         CheckUsernameContext checkUsernameContext = userConverter.CheckUsernamePOToCheckUsernameContext(checkUsernamePO);
         String question = userService.checkUsername(checkUsernameContext);
         return R.data(question);

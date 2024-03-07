@@ -46,7 +46,7 @@ public class GCloudFileChunkServiceImpl extends ServiceImpl<GCloudFileChunkMappe
      * @param context 分片文件保存上下文信息
      */
     @Override
-    public void saveChunkFile(FileChunkSaveContext context) {
+    public synchronized void saveChunkFile(FileChunkSaveContext context) {
         doStoreChunkFile(context);
         saveChunkFileRecord(context);
         doJudgeMergeFile(context);

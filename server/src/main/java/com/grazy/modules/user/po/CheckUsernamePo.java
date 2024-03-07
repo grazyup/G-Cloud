@@ -16,7 +16,7 @@ import java.io.Serializable;
 
 @Data
 @ApiModel("忘记密码-校验用户名参数")
-public class CheckUsernamePO implements Serializable {
+public class CheckUsernamePo implements Serializable {
 
     private static final long serialVersionUID = -8862186598096134507L;
 

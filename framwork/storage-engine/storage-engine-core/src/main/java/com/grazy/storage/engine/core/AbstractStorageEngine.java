@@ -4,6 +4,7 @@ import cn.hutool.core.lang.Assert;
 import com.grazy.constants.CacheConstants;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.storage.engine.core.context.DeleteStorageFileContext;
+import com.grazy.storage.engine.core.context.MergeFileContext;
 import com.grazy.storage.engine.core.context.StoreChunkFileContext;
 import com.grazy.storage.engine.core.context.StoreFileContext;
 import org.springframework.cache.Cache;
@@ -83,6 +84,21 @@ public abstract class AbstractStorageEngine implements StorageEngine {
     }
 
 
+    /**
+     * 合并分片文件
+     * 1.校验保存物理分片文件参数
+     * 2.执行合并操作
+     *
+     * @param context
+     * @throws IOException
+     */
+    @Override
+    public void mergeFile(MergeFileContext context) throws IOException {
+        checkMergeFileContext(context);
+        doMergeFile(context);
+    }
+
+
 
     /********************************************** private方法 **********************************************/
 
@@ -125,6 +141,18 @@ public abstract class AbstractStorageEngine implements StorageEngine {
     }
 
 
+    /**
+     * 校验合并分片文件的参数
+     *
+     * @param context
+     */
+    private void checkMergeFileContext(MergeFileContext context) {
+        Assert.notBlank(context.getFilename(), "文件名称不能为空");
+        Assert.notBlank(context.getIdentifier(), "文件唯一标识不能为空");
+        Assert.notNull(context.getUserId(), "当前登录用户的ID不能为空");
+        Assert.notEmpty(context.getRealPathList(), "分片路径集合不能为空");
+    }
+
 
     /********************************************** protected 方法 **********************************************/
 
@@ -154,4 +182,14 @@ public abstract class AbstractStorageEngine implements StorageEngine {
      * @throws IOException
      */
     protected abstract void doStoreChunkFile(StoreChunkFileContext context) throws IOException;
+
+
+    /**
+     * 执行合并分片文件
+     * 下沉到具体的子类去实现功能
+     *
+     * @param context
+     * @throws IOException
+     */
+    protected abstract void doMergeFile(MergeFileContext context) throws IOException;
 }

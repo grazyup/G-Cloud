@@ -9,15 +9,18 @@ import com.grazy.modules.file.context.*;
 import com.grazy.modules.file.domain.GCloudFile;
 import com.grazy.modules.file.domain.GCloudFileChunk;
 import com.grazy.modules.file.enums.DelFlagEnum;
+import com.grazy.modules.file.enums.MergeFlagEnum;
 import com.grazy.modules.file.service.GCloudFileChunkService;
 import com.grazy.modules.file.service.GCloudFileService;
 import com.grazy.modules.file.service.GCloudUserFileService;
+import com.grazy.modules.file.vo.FileChunkUploadVO;
 import com.grazy.modules.file.vo.UploadChunksVo;
 import com.grazy.modules.file.vo.UserFileVO;
 import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.service.GCloudUserService;
 import com.grazy.modules.user.vo.UserInfoVo;
+import lombok.AllArgsConstructor;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * @Author: grazy
@@ -397,7 +401,7 @@ public class fileTest {
      *
      * @return
      */
-    private MultipartFile generateMultipartFile() {
+    private static MultipartFile generateMultipartFile() {
         MultipartFile file = null;
         try {
             file = new MockMultipartFile("file", "test.txt",
@@ -436,5 +440,95 @@ public class fileTest {
         UploadChunksVo uploadedChunks = gCloudUserFileService.getUploadedChunks(queryUploadChunkContext);
         Assert.notNull(uploadedChunks);
         Assert.notEmpty(uploadedChunks.getUploadedChunks());
+    }
+
+
+    /**
+     * 测试分片文件上传成功和合并(多线程上传分片)
+     */
+    @Test
+    public void testUploadChunkAndMergeFile() throws InterruptedException{
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+
+        //创建一个线程的计数器（主线程等待）
+        // --> 统计10个线程，每个线程中run方法执行完调用 countDown()方法，计数器减 1,当计算器减到0时,主线程可以继续执行
+        CountDownLatch countDownLatch = new CountDownLatch(10);
+        for(int i = 0; i < 10; i++){
+            new ChunkUploader(countDownLatch, i + 1, 10, gCloudUserFileService, userId, info.getRootFileId()).start();
+        }
+        //线程等待（主线程）
+        countDownLatch.await();
+    }
+
+
+    /**
+     * 分片上传器
+     */
+    @AllArgsConstructor
+    private static class ChunkUploader extends Thread{
+
+        private CountDownLatch countDownLatch;
+
+        /**
+         * 分片下标
+         */
+        private Integer chunk;
+
+        /**
+         * 分片总数
+         */
+        private Integer chunks;
+
+        private GCloudUserFileService userFileService;
+
+        private Long userId;
+
+        private Long parentId;
+
+
+        /**
+         * 1.分片文件的上传
+         * 2.分片的合并
+         */
+        @Override
+        public void run() {
+            super.run();
+            //获取文件
+            MultipartFile file = generateMultipartFile();
+            String filename = "test.txt";
+            String identifier = "123123123";
+            Long totalSize = file.getSize() * chunks;
+
+            FileChunkUploadContext fileChunkUploadContext = new FileChunkUploadContext();
+            fileChunkUploadContext.setChunkNumber(chunk);
+            fileChunkUploadContext.setFile(file);
+            fileChunkUploadContext.setFilename(filename);
+            fileChunkUploadContext.setIdentifier(identifier);
+            fileChunkUploadContext.setTotalSize(totalSize);
+            fileChunkUploadContext.setCurrentChunkSize(file.getSize());
+            fileChunkUploadContext.setUserId(userId);
+            fileChunkUploadContext.setTotalChunks(chunks);
+            //分片上传
+            FileChunkUploadVO fileChunkUploadVO = userFileService.chunkUpload(fileChunkUploadContext);
+
+            //判断是否达到合并分片
+            if(fileChunkUploadVO.getMergeFlag().equals(MergeFlagEnum.READY.getCode())){
+                System.out.println("分片 " + chunk + " 检测到可以合并分片");
+                //分片合并
+                FileChunkMergeContext context = new FileChunkMergeContext();
+                context.setFilename(filename);
+                context.setIdentifier(identifier);
+                context.setParentId(parentId);
+                context.setTotalSize(totalSize);
+                context.setUserId(userId);
+                userFileService.mergeFile(context);
+                //线程计数器-1
+                countDownLatch.countDown();
+            }else {
+                countDownLatch.countDown();
+            }
+        }
     }
 }

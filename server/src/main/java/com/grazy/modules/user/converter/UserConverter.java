@@ -47,7 +47,7 @@ public interface UserConverter {
      * @param checkUsernamePO 控制层忘记密码-校验用户名参数类
      * @return 业务层忘记密码-校验用户名参数类
      */
-    CheckUsernameContext CheckUsernamePOToCheckUsernameContext(CheckUsernamePO checkUsernamePO);
+    CheckUsernameContext CheckUsernamePOToCheckUsernameContext(CheckUsernamePo checkUsernamePO);
 
     /**
      * 控制层忘记密码-校验密保答案参数类 转为 业务层忘记密码-校验密保答案参数类

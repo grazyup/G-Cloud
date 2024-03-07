@@ -180,4 +180,17 @@ public class FileController {
         UploadChunksVo uploadChunksVo = userFileService.getUploadedChunks(context);
         return R.data(uploadChunksVo);
     }
+
+    @ApiOperation(
+            value = "分片文件合并",
+            notes = "该接口提供分片文件的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("/file/merge")
+    public R<String> mergeFile(@Validated @RequestBody FileChunkMergePo fileChunkMergePo){
+        FileChunkMergeContext fileChunkMergeContext = fileConverter.FileChunkMergePoToFileChunkMergeContext(fileChunkMergePo);
+        userFileService.mergeFile(fileChunkMergeContext);
+        return R.success();
+    }
 }
