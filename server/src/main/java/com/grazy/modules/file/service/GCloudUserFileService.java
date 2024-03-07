@@ -99,4 +99,12 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @param fileChunkMergeContext 合并分片文件上下文信息
      */
     void mergeFile(FileChunkMergeContext fileChunkMergeContext);
+
+
+    /**
+     * 文件下载
+     *
+     * @param fileDownloadContext 文件下载上下文参数信息
+     */
+    void download(FileDownloadContext fileDownloadContext);
 }

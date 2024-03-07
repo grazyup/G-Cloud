@@ -21,6 +21,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.Objects;
@@ -181,6 +182,7 @@ public class FileController {
         return R.data(uploadChunksVo);
     }
 
+
     @ApiOperation(
             value = "分片文件合并",
             notes = "该接口提供分片文件的功能",
@@ -192,5 +194,22 @@ public class FileController {
         FileChunkMergeContext fileChunkMergeContext = fileConverter.FileChunkMergePoToFileChunkMergeContext(fileChunkMergePo);
         userFileService.mergeFile(fileChunkMergeContext);
         return R.success();
+    }
+
+
+    @ApiOperation(
+            value = "文件下载",
+            notes = "该接口提供文件下载的功能，以二进制流的形式在response中输出",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("/file/download")
+    public void download(@NotBlank(message = "文件ID不能为空")@RequestParam(value = "fileId",required = false) String fileId,
+                         HttpServletResponse response){
+        FileDownloadContext fileDownloadContext = new FileDownloadContext();
+        fileDownloadContext.setFileId(fileId);
+        fileDownloadContext.setResponse(response);
+        fileDownloadContext.setUserId(UserIdUtil.get());
+        userFileService.download(fileDownloadContext);
     }
 }

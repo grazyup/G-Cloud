@@ -2,15 +2,13 @@ package com.grazy.storage.engine.local;
 
 import com.grazy.core.utils.FileUtils;
 import com.grazy.storage.engine.core.AbstractStorageEngine;
-import com.grazy.storage.engine.core.context.DeleteStorageFileContext;
-import com.grazy.storage.engine.core.context.MergeFileContext;
-import com.grazy.storage.engine.core.context.StoreChunkFileContext;
-import com.grazy.storage.engine.core.context.StoreFileContext;
+import com.grazy.storage.engine.core.context.*;
 import com.grazy.storage.engine.local.config.LocalStorageEngineConfigProperties;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
@@ -89,5 +87,17 @@ public class LocalStorageEngine extends AbstractStorageEngine {
         //删除分片文件
         FileUtils.deleteFiles(realPathList);
         context.setRealPath(realFilePath);
+    }
+
+
+    /**
+     * 读取文件内容并写入到输出流中
+     *
+     * @param context
+     */
+    @Override
+    protected void doReadFile(ReadFileContext context) throws IOException{
+        File file = new File(context.getRealPath());
+        FileUtils.writeFileToOutputStream(new FileInputStream(file), context.getOutputStream(), file.length());
     }
 }

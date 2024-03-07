@@ -1,9 +1,6 @@
 package com.grazy.storage.engine.core;
 
-import com.grazy.storage.engine.core.context.DeleteStorageFileContext;
-import com.grazy.storage.engine.core.context.MergeFileContext;
-import com.grazy.storage.engine.core.context.StoreChunkFileContext;
-import com.grazy.storage.engine.core.context.StoreFileContext;
+import com.grazy.storage.engine.core.context.*;
 
 import java.io.IOException;
 
@@ -51,4 +48,13 @@ public interface StorageEngine {
      * @throws IOException
      */
     void mergeFile(MergeFileContext context) throws IOException;
+
+
+    /**
+     * 读取文件内容写入到输出流中
+     *
+     * @param readFileContext
+     * @throws IOException
+     */
+    void readFile(ReadFileContext readFileContext) throws IOException;
 }

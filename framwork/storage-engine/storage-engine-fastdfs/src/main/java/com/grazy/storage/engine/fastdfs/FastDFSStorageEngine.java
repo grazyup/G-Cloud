@@ -1,10 +1,7 @@
 package com.grazy.storage.engine.fastdfs;
 
 import com.grazy.storage.engine.core.AbstractStorageEngine;
-import com.grazy.storage.engine.core.context.DeleteStorageFileContext;
-import com.grazy.storage.engine.core.context.MergeFileContext;
-import com.grazy.storage.engine.core.context.StoreChunkFileContext;
-import com.grazy.storage.engine.core.context.StoreFileContext;
+import com.grazy.storage.engine.core.context.*;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -35,6 +32,11 @@ public class FastDFSStorageEngine extends AbstractStorageEngine {
 
     @Override
     protected void doMergeFile(MergeFileContext context) throws IOException {
+
+    }
+
+    @Override
+    protected void doReadFile(ReadFileContext context) throws IOException{
 
     }
 }

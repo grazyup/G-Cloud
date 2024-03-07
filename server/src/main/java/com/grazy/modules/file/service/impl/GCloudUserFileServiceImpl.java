@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.grazy.common.event.file.DeleteFileEvent;
+import com.grazy.common.utils.HttpUtil;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.utils.FileUtils;
@@ -24,13 +25,19 @@ import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.FileChunkUploadVO;
 import com.grazy.modules.file.vo.UploadChunksVo;
 import com.grazy.modules.file.vo.UserFileVO;
+import com.grazy.storage.engine.core.StorageEngine;
+import com.grazy.storage.engine.core.context.ReadFileContext;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -60,6 +67,9 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
 
     @Resource
     private GCloudFileChunkService gCloudFileChunkService;
+
+    @Resource
+    private StorageEngine storageEngine;
 
 
     private ApplicationContext applicationContext;
@@ -236,6 +246,31 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         this.saveUserFile(context.getUserId(),context.getParentId(),context.getFilename(),
                 context.getRecord().getFileId(),context.getRecord().getFileSizeDesc(),
                 FolderFlagEnum.NO,FileTypeEnum.getFileTypeCode(FileUtils.getFileSuffix(context.getFilename())));
+    }
+
+
+    /**
+     * 文件下载
+     * 1.校验下载的文件资源是否存在
+     * 2.判断该文件是否属于该用户
+     * 3.校验该文件是否是一个文件夹
+     * 4.执行文件下载
+     *
+     * @param context 文件下载上下文参数信息
+     */
+    @Override
+    public void download(FileDownloadContext context) {
+        GCloudUserFile record = getById(context.getFileId());
+        if(Objects.isNull(record)){
+            throw new GCloudBusinessException("文件资源不存在");
+        }
+        if(!record.getUserId().equals(context.getUserId())){
+            throw new GCloudBusinessException("您没有该文件的操作权限");
+        }
+        if(!FolderFlagEnum.YES.getCode().equals(record.getFolderFlag())){
+            throw new GCloudBusinessException("文件夹暂不支持下载");
+        }
+        doDownload(context.getResponse(),record);
     }
 
 
@@ -503,6 +538,79 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         gCloudFileService.mergeFileChunkAndSaveFileRecord(fileChunkMergeAndSaveContext);
         context.setRecord(fileChunkMergeAndSaveContext.getRecord());
     }
+
+
+
+    /**
+     * 执行文件下载
+     * 1.查询文件的真实存储路径
+     * 2.添加跨域的公共响应头
+     * 3.添加文件下载的属性信息
+     * 4.委托文件存储引擎去读取文件中的内容到输出流中
+     *
+     * @param response
+     * @param record
+     */
+    private void doDownload(HttpServletResponse response, GCloudUserFile record) {
+        GCloudFile gCloudFile = gCloudFileService.getById(record.getFileId());
+        addCommonResponseHeader(response, MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        addDownloadAttribute(gCloudFile, response);
+        realFileToOutputStream(gCloudFile.getRealPath(),response);
+    }
+
+
+    /**
+     * 委托文件存储引擎去读取文件内容并写入到输出流中
+     *
+     * @param realPath
+     * @param response
+     */
+    private void realFileToOutputStream(String realPath, HttpServletResponse response) {
+        try {
+            ReadFileContext readFileContext = new ReadFileContext();
+            readFileContext.setRealPath(realPath);
+            readFileContext.setOutputStream(response.getOutputStream());
+            storageEngine.readFile(readFileContext);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new GCloudBusinessException("文件下载失败");
+        }
+
+    }
+
+
+    /**
+     * 添加文件下载的属性信息
+     *
+     * @param gCloudFile
+     * @param response
+     */
+    private void addDownloadAttribute(GCloudFile gCloudFile, HttpServletResponse response){
+        try {
+            response.setHeader(FileConstants.CONTENT_DISPOSITION_STR,
+                    FileConstants.CONTENT_DISPOSITION_VALUE_PREFIX_STR +
+                            new String(gCloudFile.getFilename().getBytes(FileConstants.GB2312_STR),FileConstants.IOS_8859_1_STR));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            throw new GCloudBusinessException("文件下载失败");
+        }
+        response.setContentLengthLong(Long.parseLong(gCloudFile.getFileSize()));
+    }
+
+
+    /**
+     * 添加跨域的公共响应头
+     *
+     * @param response
+     * @param contentTypeValue
+     */
+    private void addCommonResponseHeader(HttpServletResponse response, String contentTypeValue) {
+        response.reset();
+        HttpUtil.addCorsResponseHeaders(response);
+        response.setHeader(FileConstants.CONTENT_TYPE_STR, contentTypeValue);
+        response.setContentType(contentTypeValue);
+    }
+
 }
 
 

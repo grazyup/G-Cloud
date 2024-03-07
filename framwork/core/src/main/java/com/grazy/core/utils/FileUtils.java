@@ -5,13 +5,11 @@ import com.grazy.core.constants.GCloudConstants;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.util.CollectionUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -185,5 +183,24 @@ public class FileUtils {
      */
     public static void appendWrite(Path target, Path source) throws IOException{
         Files.write(target, Files.readAllBytes(source), StandardOpenOption.APPEND);
+    }
+
+
+    /**
+     * 利用零拷贝技术读取文件内容并写入到文件的输出流中
+     *
+     * @param fileInputStream
+     * @param outputStream
+     * @param length
+     */
+    public static void writeFileToOutputStream(FileInputStream fileInputStream, OutputStream outputStream, long length) throws IOException{
+        FileChannel fileChannel = fileInputStream.getChannel();
+        WritableByteChannel writableByteChannel = Channels.newChannel(outputStream);
+        fileChannel.transferTo(GCloudConstants.ZERO_LONG, length, writableByteChannel);
+        outputStream.flush();
+        fileInputStream.close();
+        outputStream.close();
+        fileChannel.close();
+        writableByteChannel.close();
     }
 }
