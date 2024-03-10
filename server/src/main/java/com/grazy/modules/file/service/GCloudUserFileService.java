@@ -107,4 +107,12 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @param fileDownloadContext 文件下载上下文参数信息
      */
     void download(FileDownloadContext fileDownloadContext);
+
+
+    /**
+     * 文件预览
+     *
+     * @param filePreviewContext 文件预览上下文参数对象
+     */
+    void preview(FilePreviewContext filePreviewContext);
 }

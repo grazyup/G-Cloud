@@ -273,6 +273,30 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         doDownload(context.getResponse(),record);
     }
 
+    /**
+     * 文件预览
+     * 1.校验预览的文件资源是否存在
+     * 2.判断该文件是否属于该用户
+     * 3.校验该文件是否是一个文件夹
+     * 4.执行文件预览
+     *
+     * @param context 文件预览上下文参数对象
+     */
+    @Override
+    public void preview(FilePreviewContext context) {
+        GCloudUserFile record = getById(context.getFileId());
+        if(Objects.isNull(record)){
+            throw new GCloudBusinessException("文件资源不存在");
+        }
+        if(!record.getUserId().equals(context.getUserId())){
+            throw new GCloudBusinessException("您没有该文件的操作权限");
+        }
+        if(!FolderFlagEnum.YES.getCode().equals(record.getFolderFlag())){
+            throw new GCloudBusinessException("文件夹暂不支持下载");
+        }
+        doPreview(context.getResponse(),record);
+    }
+
 
 
     /********************************************** private方法 **********************************************/
@@ -555,6 +579,22 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         GCloudFile gCloudFile = gCloudFileService.getById(record.getFileId());
         addCommonResponseHeader(response, MediaType.APPLICATION_OCTET_STREAM_VALUE);
         addDownloadAttribute(gCloudFile, response);
+        realFileToOutputStream(gCloudFile.getRealPath(),response);
+    }
+
+
+    /**
+     * 执行文件预览
+     * 1.查询文件的真实存储路径
+     * 2.添加跨域的公共响应头
+     * 3.委托文件存储引擎去读取文件中的内容到输出流中
+     *
+     * @param response
+     * @param record
+     */
+    private void doPreview(HttpServletResponse response,GCloudUserFile record) {
+        GCloudFile gCloudFile = gCloudFileService.getById(record.getFileId());
+        addCommonResponseHeader(response, gCloudFile.getFilePreviewContentType());
         realFileToOutputStream(gCloudFile.getRealPath(),response);
     }
 

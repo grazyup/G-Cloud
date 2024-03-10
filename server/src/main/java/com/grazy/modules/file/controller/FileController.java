@@ -212,4 +212,21 @@ public class FileController {
         fileDownloadContext.setUserId(UserIdUtil.get());
         userFileService.download(fileDownloadContext);
     }
+
+
+    @ApiOperation(
+            value = "文件预览",
+            notes = "该接口提供文件预览的功能，以二进制流的形式在response中输出",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("/file/preview")
+    public void preview(@NotBlank(message = "文件ID不能为空")@RequestParam(value = "fileId",required = false) String fileId,
+                         HttpServletResponse response){
+        FilePreviewContext filePreviewContext = new FilePreviewContext();
+        filePreviewContext.setFileId(fileId);
+        filePreviewContext.setResponse(response);
+        filePreviewContext.setUserId(UserIdUtil.get());
+        userFileService.preview(filePreviewContext);
+    }
 }
