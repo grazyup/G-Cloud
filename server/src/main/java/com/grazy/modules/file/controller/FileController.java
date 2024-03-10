@@ -12,6 +12,7 @@ import com.grazy.modules.file.enums.DelFlagEnum;
 import com.grazy.modules.file.po.*;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.FileChunkUploadVO;
+import com.grazy.modules.file.vo.FolderTreeNodeVo;
 import com.grazy.modules.file.vo.UserFileVO;
 import com.grazy.modules.file.vo.UploadChunksVo;
 import io.swagger.annotations.Api;
@@ -201,9 +202,9 @@ public class FileController {
             value = "文件下载",
             notes = "该接口提供文件下载的功能，以二进制流的形式在response中输出",
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+            produces = MediaType.APPLICATION_STREAM_JSON_VALUE
     )
-    @PostMapping("/file/download")
+    @GetMapping("/file/download")
     public void download(@NotBlank(message = "文件ID不能为空")@RequestParam(value = "fileId",required = false) String fileId,
                          HttpServletResponse response){
         FileDownloadContext fileDownloadContext = new FileDownloadContext();
@@ -218,9 +219,9 @@ public class FileController {
             value = "文件预览",
             notes = "该接口提供文件预览的功能，以二进制流的形式在response中输出",
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+            produces = MediaType.APPLICATION_STREAM_JSON_VALUE
     )
-    @PostMapping("/file/preview")
+    @GetMapping("/file/preview")
     public void preview(@NotBlank(message = "文件ID不能为空")@RequestParam(value = "fileId",required = false) String fileId,
                          HttpServletResponse response){
         FilePreviewContext filePreviewContext = new FilePreviewContext();
@@ -228,5 +229,20 @@ public class FileController {
         filePreviewContext.setResponse(response);
         filePreviewContext.setUserId(UserIdUtil.get());
         userFileService.preview(filePreviewContext);
+    }
+
+
+    @ApiOperation(
+            value = "查询文件夹树",
+            notes = "该接口提供查询文件夹树的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_STREAM_JSON_VALUE
+    )
+    @GetMapping("/file/folder/tree")
+    public R<List<FolderTreeNodeVo>> getFolderTree(){
+        QueryFolderTreeContext context = new QueryFolderTreeContext();
+        context.setUserId(UserIdUtil.get());
+        List<FolderTreeNodeVo> folderTreeNodeVoList = userFileService.getFolderTree(context);
+        return R.data(folderTreeNodeVoList);
     }
 }

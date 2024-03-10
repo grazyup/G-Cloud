@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.grazy.modules.file.context.*;
 import com.grazy.modules.file.domain.GCloudUserFile;
 import com.grazy.modules.file.vo.FileChunkUploadVO;
+import com.grazy.modules.file.vo.FolderTreeNodeVo;
 import com.grazy.modules.file.vo.UploadChunksVo;
 import com.grazy.modules.file.vo.UserFileVO;
 
@@ -115,4 +116,13 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @param filePreviewContext 文件预览上下文参数对象
      */
     void preview(FilePreviewContext filePreviewContext);
+
+
+    /**
+     * 查询文件夹树
+     *
+     * @param context 查询文件夹树上下文参数对象
+     * @return
+     */
+    List<FolderTreeNodeVo> getFolderTree(QueryFolderTreeContext context);
 }

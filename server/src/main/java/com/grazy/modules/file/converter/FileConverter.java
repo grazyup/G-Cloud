@@ -1,7 +1,9 @@
 package com.grazy.modules.file.converter;
 
 import com.grazy.modules.file.context.*;
+import com.grazy.modules.file.domain.GCloudUserFile;
 import com.grazy.modules.file.po.*;
+import com.grazy.modules.file.vo.FolderTreeNodeVo;
 import com.grazy.storage.engine.core.context.StoreChunkFileContext;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -98,4 +100,10 @@ public interface FileConverter {
 
 
     FileChunkMergeAndSaveContext FileChunkMergeContextToFileChunkMergeAndSaveContext(FileChunkMergeContext context);
+
+
+    @Mapping(target = "label",source = "filename")
+    @Mapping(target = "id",source = "fileId")
+    @Mapping(target = "children",expression = "java(com.google.common.collect.Lists.newArrayList())")
+    FolderTreeNodeVo GCloudUserFileToFolderTreeNodeVO(GCloudUserFile gCloudUserFile);
 }

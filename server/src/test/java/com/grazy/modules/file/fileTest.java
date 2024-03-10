@@ -14,6 +14,7 @@ import com.grazy.modules.file.service.GCloudFileChunkService;
 import com.grazy.modules.file.service.GCloudFileService;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.FileChunkUploadVO;
+import com.grazy.modules.file.vo.FolderTreeNodeVo;
 import com.grazy.modules.file.vo.UploadChunksVo;
 import com.grazy.modules.file.vo.UserFileVO;
 import com.grazy.modules.user.context.UserLoginContext;
@@ -529,6 +530,47 @@ public class fileTest {
             }else {
                 countDownLatch.countDown();
             }
+        }
+    }
+
+
+    /**
+     * 测试获取文件夹树列表
+     */
+    @Test
+    public void testGetFolderTree(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+
+        //创建文件夹
+        CreateFolderContext createFolderContext = new CreateFolderContext();
+        createFolderContext.setFolderName("folder-1");
+        createFolderContext.setUserId(userId);
+        createFolderContext.setParentId(info.getRootFileId());
+        Long fileId = gCloudUserFileService.createFolder(createFolderContext);
+
+
+        createFolderContext.setFolderName("folder-2");
+        fileId = gCloudUserFileService.createFolder(createFolderContext);
+
+        createFolderContext.setFolderName("folder-2-1");
+        createFolderContext.setParentId(fileId);
+        gCloudUserFileService.createFolder(createFolderContext);
+
+        createFolderContext.setFolderName("folder-2-2");
+        createFolderContext.setParentId(fileId);
+        fileId = gCloudUserFileService.createFolder(createFolderContext);
+
+        createFolderContext.setFolderName("folder-2-2-1");
+        createFolderContext.setParentId(fileId);
+        fileId = gCloudUserFileService.createFolder(createFolderContext);
+
+        QueryFolderTreeContext queryFolderTreeContext = new QueryFolderTreeContext();
+        queryFolderTreeContext.setUserId(userId);
+        List<FolderTreeNodeVo> folderTree = gCloudUserFileService.getFolderTree(queryFolderTreeContext);
+        for(FolderTreeNodeVo el: folderTree){
+            el.print();
         }
     }
 }

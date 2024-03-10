@@ -3,6 +3,7 @@ package com.grazy.modules.file.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Lists;
 import com.grazy.common.event.file.DeleteFileEvent;
 import com.grazy.common.utils.HttpUtil;
 import com.grazy.core.constants.GCloudConstants;
@@ -23,25 +24,23 @@ import com.grazy.modules.file.service.GCloudFileChunkService;
 import com.grazy.modules.file.service.GCloudFileService;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.FileChunkUploadVO;
+import com.grazy.modules.file.vo.FolderTreeNodeVo;
 import com.grazy.modules.file.vo.UploadChunksVo;
 import com.grazy.modules.file.vo.UserFileVO;
 import com.grazy.storage.engine.core.StorageEngine;
 import com.grazy.storage.engine.core.context.ReadFileContext;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -297,6 +296,64 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         doPreview(context.getResponse(),record);
     }
 
+
+    /**
+     * 查询文件夹树列表
+     * 1.查询出当前用户的全部的文件夹列表
+     * 2.在内存中拼装文件夹树
+     *
+     * @param context 查询文件夹树上下文参数对象
+     * @return
+     */
+    @Override
+    public List<FolderTreeNodeVo> getFolderTree(QueryFolderTreeContext context) {
+        List<GCloudUserFile> folderRecords = queryFolderRecords(context.getUserId());
+        if(CollectionUtils.isEmpty(folderRecords)){
+            return Lists.newArrayList();
+        }
+        return assembleFolderTreesNodeVo(folderRecords);
+    }
+
+
+    /**
+     * 在内存中拼装文件夹树
+     *
+     * @param folderRecords
+     * @return
+     */
+    private List<FolderTreeNodeVo> assembleFolderTreesNodeVo(List<GCloudUserFile> folderRecords) {
+        List<FolderTreeNodeVo> mappedFolderTreeNodeVOList = folderRecords.stream()
+                .map(fileConverter::GCloudUserFileToFolderTreeNodeVO)
+                .collect(Collectors.toList());
+        Map<Long, List<FolderTreeNodeVo>> mappedFolderTreeNodeVOMap = mappedFolderTreeNodeVOList.stream()
+                .collect(Collectors.groupingBy(FolderTreeNodeVo::getParentId));
+        for(FolderTreeNodeVo el: mappedFolderTreeNodeVOList){
+            //获取的是el文件夹下的子文件夹集合
+            List<FolderTreeNodeVo> children = mappedFolderTreeNodeVOMap.get(el.getId());
+            if(CollectionUtils.isNotEmpty(children)){
+                el.getChildren().addAll(children);
+            }
+        }
+        //返回树形结构的parentId为0的根节点（可能有多个根节点，所以使用集合存储）
+        return mappedFolderTreeNodeVOList.stream().
+                filter(value->Objects.equals(value.getParentId(),FileConstants.TOP_PARENT_ID))
+                .collect(Collectors.toList());
+    }
+
+
+    /**
+     * 查询当前用户的全部文件夹列表
+     *
+     * @param userId
+     * @return
+     */
+    private List<GCloudUserFile> queryFolderRecords(Long userId) {
+        LambdaQueryWrapper<GCloudUserFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(GCloudUserFile::getUserId, userId)
+                .eq(GCloudUserFile::getFolderFlag, FolderFlagEnum.YES.getCode())
+                .eq(GCloudUserFile::getDelFlag, DelFlagEnum.NO.getCode());
+        return list(lambdaQueryWrapper);
+    }
 
 
     /********************************************** private方法 **********************************************/
