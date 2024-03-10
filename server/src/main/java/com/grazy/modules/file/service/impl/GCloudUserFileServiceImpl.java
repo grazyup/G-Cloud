@@ -315,45 +315,6 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
     }
 
 
-    /**
-     * 在内存中拼装文件夹树
-     *
-     * @param folderRecords
-     * @return
-     */
-    private List<FolderTreeNodeVo> assembleFolderTreesNodeVo(List<GCloudUserFile> folderRecords) {
-        List<FolderTreeNodeVo> mappedFolderTreeNodeVOList = folderRecords.stream()
-                .map(fileConverter::GCloudUserFileToFolderTreeNodeVO)
-                .collect(Collectors.toList());
-        Map<Long, List<FolderTreeNodeVo>> mappedFolderTreeNodeVOMap = mappedFolderTreeNodeVOList.stream()
-                .collect(Collectors.groupingBy(FolderTreeNodeVo::getParentId));
-        for(FolderTreeNodeVo el: mappedFolderTreeNodeVOList){
-            //获取的是el文件夹下的子文件夹集合
-            List<FolderTreeNodeVo> children = mappedFolderTreeNodeVOMap.get(el.getId());
-            if(CollectionUtils.isNotEmpty(children)){
-                el.getChildren().addAll(children);
-            }
-        }
-        //返回树形结构的parentId为0的根节点（可能有多个根节点，所以使用集合存储）
-        return mappedFolderTreeNodeVOList.stream().
-                filter(value->Objects.equals(value.getParentId(),FileConstants.TOP_PARENT_ID))
-                .collect(Collectors.toList());
-    }
-
-
-    /**
-     * 查询当前用户的全部文件夹列表
-     *
-     * @param userId
-     * @return
-     */
-    private List<GCloudUserFile> queryFolderRecords(Long userId) {
-        LambdaQueryWrapper<GCloudUserFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(GCloudUserFile::getUserId, userId)
-                .eq(GCloudUserFile::getFolderFlag, FolderFlagEnum.YES.getCode())
-                .eq(GCloudUserFile::getDelFlag, DelFlagEnum.NO.getCode());
-        return list(lambdaQueryWrapper);
-    }
 
 
     /********************************************** private方法 **********************************************/
@@ -708,6 +669,46 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         response.setContentType(contentTypeValue);
     }
 
+
+    /**
+     * 在内存中拼装文件夹树
+     *
+     * @param folderRecords
+     * @return
+     */
+    private List<FolderTreeNodeVo> assembleFolderTreesNodeVo(List<GCloudUserFile> folderRecords) {
+        List<FolderTreeNodeVo> mappedFolderTreeNodeVOList = folderRecords.stream()
+                .map(fileConverter::GCloudUserFileToFolderTreeNodeVO)
+                .collect(Collectors.toList());
+        Map<Long, List<FolderTreeNodeVo>> mappedFolderTreeNodeVOMap = mappedFolderTreeNodeVOList.stream()
+                .collect(Collectors.groupingBy(FolderTreeNodeVo::getParentId));
+        for(FolderTreeNodeVo el: mappedFolderTreeNodeVOList){
+            //获取的是el文件夹下的子文件夹集合
+            List<FolderTreeNodeVo> children = mappedFolderTreeNodeVOMap.get(el.getId());
+            if(CollectionUtils.isNotEmpty(children)){
+                el.getChildren().addAll(children);
+            }
+        }
+        //返回树形结构的parentId为0的根节点（可能有多个根节点，所以使用集合存储）
+        return mappedFolderTreeNodeVOList.stream().
+                filter(value->Objects.equals(value.getParentId(),FileConstants.TOP_PARENT_ID))
+                .collect(Collectors.toList());
+    }
+
+
+    /**
+     * 查询当前用户的全部文件夹列表
+     *
+     * @param userId
+     * @return
+     */
+    private List<GCloudUserFile> queryFolderRecords(Long userId) {
+        LambdaQueryWrapper<GCloudUserFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(GCloudUserFile::getUserId, userId)
+                .eq(GCloudUserFile::getFolderFlag, FolderFlagEnum.YES.getCode())
+                .eq(GCloudUserFile::getDelFlag, DelFlagEnum.NO.getCode());
+        return list(lambdaQueryWrapper);
+    }
 }
 
 
