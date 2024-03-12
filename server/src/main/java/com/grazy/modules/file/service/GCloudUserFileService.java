@@ -133,4 +133,13 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @param transferFileContext 移动文件上下文参数对象
      */
     void transfer(TransferFileContext transferFileContext);
+
+
+    /**
+     * 文件复制
+     *
+     * @param copyFileContext 文件复制上下文参数对象
+     */
+    void copy(CopyFileContext copyFileContext);
+
 }

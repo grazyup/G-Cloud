@@ -601,7 +601,7 @@ public class fileTest {
         gCloudUserFileService.transfer(transferFileContext);
 
         QueryFileListContext queryFileListContext = new QueryFileListContext();
-        queryFileListContext.setParentId(info.getRootFileId());
+        queryFileListContext.setParentId(fileId);
         queryFileListContext.setUserId(userId);
         queryFileListContext.setDelFlag(DelFlagEnum.NO.getCode());
         List<UserFileVO> records = gCloudUserFileService.getFileList(queryFileListContext);
@@ -635,5 +635,67 @@ public class fileTest {
         transferFileContext.setUserId(userId);
         transferFileContext.setFileIdList(Lists.newArrayList(fileId));
         gCloudUserFileService.transfer(transferFileContext);
+    }
+
+
+    /**
+     * 测试移动文件 -- 成功
+     */
+    @Test
+    public void testCopySuccess(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+
+        //创建文件夹
+        CreateFolderContext createFolderContext = new CreateFolderContext();
+        createFolderContext.setFolderName("folder-1");
+        createFolderContext.setUserId(userId);
+        createFolderContext.setParentId(info.getRootFileId());
+        Long fileId = gCloudUserFileService.createFolder(createFolderContext);
+
+        createFolderContext.setFolderName("folder-2");
+        Long folder = gCloudUserFileService.createFolder(createFolderContext);
+
+        CopyFileContext copyFileContext = new CopyFileContext();
+        copyFileContext.setTargetParentId(fileId);
+        copyFileContext.setUserId(userId);
+        copyFileContext.setFileIdList(Lists.newArrayList(folder));
+        gCloudUserFileService.copy(copyFileContext);
+
+        QueryFileListContext queryFileListContext = new QueryFileListContext();
+        queryFileListContext.setParentId(fileId);
+        queryFileListContext.setUserId(userId);
+        queryFileListContext.setDelFlag(DelFlagEnum.NO.getCode());
+        List<UserFileVO> records = gCloudUserFileService.getFileList(queryFileListContext);
+        Assert.notEmpty(records);
+    }
+
+
+    /**
+     * 测试移动文件 -- 失败 目标文件夹是要转移的文件列表中的文件夹或者是其子文件夹
+     */
+    @Test(expected = GCloudBusinessException.class)
+    public void testCopyError(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+
+        //创建文件夹
+        CreateFolderContext createFolderContext = new CreateFolderContext();
+        createFolderContext.setFolderName("folder-1");
+        createFolderContext.setUserId(userId);
+        createFolderContext.setParentId(info.getRootFileId());
+        Long fileId = gCloudUserFileService.createFolder(createFolderContext);
+
+        createFolderContext.setFolderName("folder-2");
+        createFolderContext.setParentId(fileId);
+        Long folder = gCloudUserFileService.createFolder(createFolderContext);
+
+        CopyFileContext copyFileContext = new CopyFileContext();
+        copyFileContext.setTargetParentId(folder);
+        copyFileContext.setUserId(userId);
+        copyFileContext.setFileIdList(Lists.newArrayList(fileId));
+        gCloudUserFileService.copy(copyFileContext);
     }
 }

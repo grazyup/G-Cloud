@@ -329,7 +329,104 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
     }
 
 
+    /**
+     * 文件复制
+     * 1.条件校验
+     * 2.执行文件复制操作
+     *
+     * @param context 文件复制上下文参数对象
+     */
+    @Override
+    public void copy(CopyFileContext context) {
+        checkCopyCondition(context);
+        doCopy(context);
+    }
 
+
+    /**
+     * 执行文件复制操作
+     *
+     * @param context
+     */
+    private void doCopy(CopyFileContext context) {
+        List<GCloudUserFile> prepareRecords = context.getPrepareRecords();
+        if(CollectionUtils.isNotEmpty(prepareRecords)){
+            ArrayList<GCloudUserFile> newRecord = Lists.newArrayList();
+            prepareRecords.stream().forEach(record
+                    -> assembleCopyChildRecord(record,newRecord,context.getUserId(),context.getTargetParentId()));
+            if(!saveBatch(newRecord)){
+                throw new GCloudBusinessException("文件复制失败");
+            }
+        }
+    }
+
+
+    /**
+     * 拼装当前文件记录以及所有的子文件记录
+     *
+     * @param record
+     * @param newRecord
+     * @param userId
+     * @param targetParentId
+     */
+    private void assembleCopyChildRecord(GCloudUserFile record, ArrayList<GCloudUserFile> newRecord,
+                                         Long userId, Long targetParentId) {
+        //保存旧文件ID
+        Long oldFileId = record.getFileId();
+        Long newFileId = IdUtil.get();
+
+        record.setFileId(newFileId);
+        record.setUserId(userId);
+        record.setParentId(targetParentId);
+        record.setCreateUser(userId);
+        record.setCreateTime(new Date());
+        record.setUpdateUser(userId);
+        record.setUpdateTime(new Date());
+        //处理重名问题
+        handleDuplicateFilename(record);
+        newRecord.add(record);
+
+        if(FolderFlagEnum.YES.getCode().equals(record.getFolderFlag())){
+            List<GCloudUserFile> childRecord = findChildRecord(oldFileId);
+            if(CollectionUtils.isEmpty(childRecord)){
+                return;
+            }
+            childRecord.stream().forEach(value -> assembleCopyChildRecord(value,newRecord,userId,newFileId));
+        }
+    }
+
+
+    /**
+     * 查找下一级的文件记录
+     *
+     * @param parentId
+     * @return
+     */
+    private List<GCloudUserFile> findChildRecord(Long parentId) {
+        LambdaQueryWrapper<GCloudUserFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(GCloudUserFile::getParentId,parentId)
+                .eq(GCloudUserFile::getDelFlag,DelFlagEnum.NO.getCode());
+        return list(lambdaQueryWrapper);
+    }
+
+
+    /**
+     * 文件复制条件校验
+     * 1.判断的目标文件必须是一个文件夹
+     * 2.选中要复制的文件列表中不能含有目标文件夹及其子文件夹
+     *
+     */
+    private void checkCopyCondition(CopyFileContext context) {
+        GCloudUserFile parentFile = getById(context.getTargetParentId());
+        if(Objects.nonNull(parentFile) && Objects.equals(parentFile.getFolderFlag(),FolderFlagEnum.NO.getCode())){
+            throw new GCloudBusinessException("目标文件不是一个文件夹");
+        }
+        List<GCloudUserFile> prepareRecords = listByIds(context.getFileIdList());
+        context.setPrepareRecords(prepareRecords);
+        if(checkIsChildFolder(prepareRecords, context.getTargetParentId(), context.getUserId())){
+            throw new GCloudBusinessException("目标文件夹ID不能是选中文件列表的文件夹ID或其子文件夹ID");
+        }
+    }
 
 
     /********************************************** private方法 **********************************************/
@@ -740,6 +837,8 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
             record.setCreateTime(new Date());
             record.setUpdateUser(context.getUserId());
             record.setUpdateTime(new Date());
+            //处理重复文件名
+            handleDuplicateFilename(record);
         });
         if(!updateBatchById(prepareRecords)){
             throw new GCloudBusinessException("文件转移失败");
@@ -768,7 +867,7 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
 
 
     /**
-     * 校验目标文件夹ID是不是要操作的文件记录的文件夹ID以及其子文件夹ID
+     * 校验目标文件夹ID是否是操作的文件记录的文件夹ID以及其子文件夹ID
      * 1.如果操作的文件列表中没有文件夹，直接返回false
      * 2.拼装文件夹ID以及所有子文件夹ID，判断存在即可
      *

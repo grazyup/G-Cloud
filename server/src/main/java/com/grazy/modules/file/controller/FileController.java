@@ -267,4 +267,26 @@ public class FileController {
         userFileService.transfer(transferFileContext);
         return R.success("文件移动成功");
     }
+
+
+    @ApiOperation(
+            value = "文件复制",
+            notes = "该接口提供文件复制的功能",
+            consumes = MediaType.APPLICATION_STREAM_JSON_VALUE,
+            produces = MediaType.APPLICATION_STREAM_JSON_VALUE
+    )
+    @GetMapping("/file/copy")
+    public R<String> copy(@Validated @RequestBody CopyFilePo copyFilePo){
+        CopyFileContext copyFileContext = new CopyFileContext();
+        copyFileContext.setTargetParentId(IdUtil.decrypt(copyFilePo.getTargetParentId()));
+        copyFileContext.setUserId(UserIdUtil.get());
+        List<Long> fileIdList = Splitter.on(GCloudConstants.COMMON_SEPARATOR).
+                splitToList(copyFilePo.getFileIds())
+                .stream()
+                .map(IdUtil::decrypt)
+                .collect(Collectors.toList());
+        copyFileContext.setFileIdList(fileIdList);
+        userFileService.copy(copyFileContext);
+        return R.success("文件复制成功");
+    }
 }
