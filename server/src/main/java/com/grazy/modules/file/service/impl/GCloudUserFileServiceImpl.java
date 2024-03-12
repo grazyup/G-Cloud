@@ -23,10 +23,7 @@ import com.grazy.modules.file.mapper.GCloudUserFileMapper;
 import com.grazy.modules.file.service.GCloudFileChunkService;
 import com.grazy.modules.file.service.GCloudFileService;
 import com.grazy.modules.file.service.GCloudUserFileService;
-import com.grazy.modules.file.vo.FileChunkUploadVO;
-import com.grazy.modules.file.vo.FolderTreeNodeVo;
-import com.grazy.modules.file.vo.UploadChunksVo;
-import com.grazy.modules.file.vo.UserFileVO;
+import com.grazy.modules.file.vo.*;
 import com.grazy.storage.engine.core.StorageEngine;
 import com.grazy.storage.engine.core.context.ReadFileContext;
 import org.apache.commons.collections.CollectionUtils;
@@ -342,91 +339,6 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         doCopy(context);
     }
 
-
-    /**
-     * 执行文件复制操作
-     *
-     * @param context
-     */
-    private void doCopy(CopyFileContext context) {
-        List<GCloudUserFile> prepareRecords = context.getPrepareRecords();
-        if(CollectionUtils.isNotEmpty(prepareRecords)){
-            ArrayList<GCloudUserFile> newRecord = Lists.newArrayList();
-            prepareRecords.stream().forEach(record
-                    -> assembleCopyChildRecord(record,newRecord,context.getUserId(),context.getTargetParentId()));
-            if(!saveBatch(newRecord)){
-                throw new GCloudBusinessException("文件复制失败");
-            }
-        }
-    }
-
-
-    /**
-     * 拼装当前文件记录以及所有的子文件记录
-     *
-     * @param record
-     * @param newRecord
-     * @param userId
-     * @param targetParentId
-     */
-    private void assembleCopyChildRecord(GCloudUserFile record, ArrayList<GCloudUserFile> newRecord,
-                                         Long userId, Long targetParentId) {
-        //保存旧文件ID
-        Long oldFileId = record.getFileId();
-        Long newFileId = IdUtil.get();
-
-        record.setFileId(newFileId);
-        record.setUserId(userId);
-        record.setParentId(targetParentId);
-        record.setCreateUser(userId);
-        record.setCreateTime(new Date());
-        record.setUpdateUser(userId);
-        record.setUpdateTime(new Date());
-        //处理重名问题
-        handleDuplicateFilename(record);
-        newRecord.add(record);
-
-        if(FolderFlagEnum.YES.getCode().equals(record.getFolderFlag())){
-            List<GCloudUserFile> childRecord = findChildRecord(oldFileId);
-            if(CollectionUtils.isEmpty(childRecord)){
-                return;
-            }
-            childRecord.stream().forEach(value -> assembleCopyChildRecord(value,newRecord,userId,newFileId));
-        }
-    }
-
-
-    /**
-     * 查找下一级的文件记录
-     *
-     * @param parentId
-     * @return
-     */
-    private List<GCloudUserFile> findChildRecord(Long parentId) {
-        LambdaQueryWrapper<GCloudUserFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(GCloudUserFile::getParentId,parentId)
-                .eq(GCloudUserFile::getDelFlag,DelFlagEnum.NO.getCode());
-        return list(lambdaQueryWrapper);
-    }
-
-
-    /**
-     * 文件复制条件校验
-     * 1.判断的目标文件必须是一个文件夹
-     * 2.选中要复制的文件列表中不能含有目标文件夹及其子文件夹
-     *
-     */
-    private void checkCopyCondition(CopyFileContext context) {
-        GCloudUserFile parentFile = getById(context.getTargetParentId());
-        if(Objects.nonNull(parentFile) && Objects.equals(parentFile.getFolderFlag(),FolderFlagEnum.NO.getCode())){
-            throw new GCloudBusinessException("目标文件不是一个文件夹");
-        }
-        List<GCloudUserFile> prepareRecords = listByIds(context.getFileIdList());
-        context.setPrepareRecords(prepareRecords);
-        if(checkIsChildFolder(prepareRecords, context.getTargetParentId(), context.getUserId())){
-            throw new GCloudBusinessException("目标文件夹ID不能是选中文件列表的文件夹ID或其子文件夹ID");
-        }
-    }
 
 
     /********************************************** private方法 **********************************************/
@@ -916,6 +828,94 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         childFolderRecords.stream()
                 .forEach(childRecord -> findAllChildFolderRecords(unavailableFolderRecords,folderRecordMap,childRecord));
     }
+
+
+    /**
+     * 执行文件复制操作
+     *
+     * @param context
+     */
+    private void doCopy(CopyFileContext context) {
+        List<GCloudUserFile> prepareRecords = context.getPrepareRecords();
+        if(CollectionUtils.isNotEmpty(prepareRecords)){
+            ArrayList<GCloudUserFile> newRecord = Lists.newArrayList();
+            prepareRecords.stream().forEach(record
+                    -> assembleCopyChildRecord(record,newRecord,context.getUserId(),context.getTargetParentId()));
+            if(!saveBatch(newRecord)){
+                throw new GCloudBusinessException("文件复制失败");
+            }
+        }
+    }
+
+
+    /**
+     * 拼装当前文件记录以及所有的子文件记录
+     *
+     * @param record
+     * @param newRecord
+     * @param userId
+     * @param targetParentId
+     */
+    private void assembleCopyChildRecord(GCloudUserFile record, ArrayList<GCloudUserFile> newRecord,
+                                         Long userId, Long targetParentId) {
+        //保存旧文件ID
+        Long oldFileId = record.getFileId();
+        Long newFileId = IdUtil.get();
+
+        record.setFileId(newFileId);
+        record.setUserId(userId);
+        record.setParentId(targetParentId);
+        record.setCreateUser(userId);
+        record.setCreateTime(new Date());
+        record.setUpdateUser(userId);
+        record.setUpdateTime(new Date());
+        //处理重名问题
+        handleDuplicateFilename(record);
+        newRecord.add(record);
+
+        if(FolderFlagEnum.YES.getCode().equals(record.getFolderFlag())){
+            List<GCloudUserFile> childRecord = findChildRecord(oldFileId);
+            if(CollectionUtils.isEmpty(childRecord)){
+                return;
+            }
+            childRecord.stream().forEach(value -> assembleCopyChildRecord(value,newRecord,userId,newFileId));
+        }
+    }
+
+
+    /**
+     * 查找下一级的文件记录
+     *
+     * @param parentId
+     * @return
+     */
+    private List<GCloudUserFile> findChildRecord(Long parentId) {
+        LambdaQueryWrapper<GCloudUserFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(GCloudUserFile::getParentId,parentId)
+                .eq(GCloudUserFile::getDelFlag,DelFlagEnum.NO.getCode());
+        return list(lambdaQueryWrapper);
+    }
+
+
+    /**
+     * 文件复制条件校验
+     * 1.判断的目标文件必须是一个文件夹
+     * 2.选中要复制的文件列表中不能含有目标文件夹及其子文件夹
+     *
+     */
+    private void checkCopyCondition(CopyFileContext context) {
+        GCloudUserFile parentFile = getById(context.getTargetParentId());
+        if(Objects.nonNull(parentFile) && Objects.equals(parentFile.getFolderFlag(),FolderFlagEnum.NO.getCode())){
+            throw new GCloudBusinessException("目标文件不是一个文件夹");
+        }
+        List<GCloudUserFile> prepareRecords = listByIds(context.getFileIdList());
+        context.setPrepareRecords(prepareRecords);
+        if(checkIsChildFolder(prepareRecords, context.getTargetParentId(), context.getUserId())){
+            throw new GCloudBusinessException("目标文件夹ID不能是选中文件列表的文件夹ID或其子文件夹ID");
+        }
+    }
+
+
 }
 
 
