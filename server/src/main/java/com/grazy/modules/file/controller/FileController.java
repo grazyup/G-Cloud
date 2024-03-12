@@ -245,4 +245,26 @@ public class FileController {
         List<FolderTreeNodeVo> folderTreeNodeVoList = userFileService.getFolderTree(context);
         return R.data(folderTreeNodeVoList);
     }
+
+
+    @ApiOperation(
+            value = "移动文件",
+            notes = "该接口提供移动文件的功能",
+            consumes = MediaType.APPLICATION_STREAM_JSON_VALUE,
+            produces = MediaType.APPLICATION_STREAM_JSON_VALUE
+    )
+    @GetMapping("/file/transfer")
+    public R<String> transfer(@Validated @RequestBody TransferFilePo transferFilePo){
+        TransferFileContext transferFileContext = new TransferFileContext();
+        transferFileContext.setTargetParentId(IdUtil.decrypt(transferFilePo.getTargetParentId()));
+        transferFileContext.setUserId(UserIdUtil.get());
+        List<Long> fileIdList = Splitter.on(GCloudConstants.COMMON_SEPARATOR).
+                splitToList(transferFilePo.getFileIds())
+                .stream()
+                .map(IdUtil::decrypt)
+                .collect(Collectors.toList());
+        transferFileContext.setFileIdList(fileIdList);
+        userFileService.transfer(transferFileContext);
+        return R.success("文件移动成功");
+    }
 }

@@ -315,6 +315,21 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
     }
 
 
+    /**
+     * 移动文件
+     * 1.转移权限条件校验
+     * 2.执行文件移动
+     *
+     * @param context 移动文件上下文参数对象
+     */
+    @Override
+    public void transfer(TransferFileContext context) {
+        checkTransferCondition(context);
+        doTransfer(context);
+    }
+
+
+
 
 
     /********************************************** private方法 **********************************************/
@@ -708,6 +723,99 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
                 .eq(GCloudUserFile::getFolderFlag, FolderFlagEnum.YES.getCode())
                 .eq(GCloudUserFile::getDelFlag, DelFlagEnum.NO.getCode());
         return list(lambdaQueryWrapper);
+    }
+
+
+    /**
+     * 执行文件移动
+     *
+     * @param context
+     */
+    private void doTransfer(TransferFileContext context) {
+        List<GCloudUserFile> prepareRecords = context.getPrepareRecords();
+        prepareRecords.stream().forEach(record -> {
+            record.setParentId(context.getTargetParentId());
+            record.setUserId(context.getUserId());
+            record.setCreateUser(context.getUserId());
+            record.setCreateTime(new Date());
+            record.setUpdateUser(context.getUserId());
+            record.setUpdateTime(new Date());
+        });
+        if(!updateBatchById(prepareRecords)){
+            throw new GCloudBusinessException("文件转移失败");
+        }
+    }
+
+
+    /**
+     * 转移权限条件校验
+     * 1.判断的目标文件必须是一个文件夹
+     * 2.选中要转移的文件列表中不能含有目标文件夹及其子文件夹
+     *
+     * @param context
+     */
+    private void checkTransferCondition(TransferFileContext context) {
+        GCloudUserFile parentFile = getById(context.getTargetParentId());
+        if(Objects.nonNull(parentFile) && Objects.equals(parentFile.getFolderFlag(),FolderFlagEnum.NO.getCode())){
+            throw new GCloudBusinessException("目标文件不是一个文件夹");
+        }
+        List<GCloudUserFile> prepareRecords = listByIds(context.getFileIdList());
+        context.setPrepareRecords(prepareRecords);
+        if(checkIsChildFolder(prepareRecords, context.getTargetParentId(), context.getUserId())){
+            throw new GCloudBusinessException("目标文件夹ID不能是选中文件列表的文件夹ID或其子文件夹ID");
+        }
+    }
+
+
+    /**
+     * 校验目标文件夹ID是不是要操作的文件记录的文件夹ID以及其子文件夹ID
+     * 1.如果操作的文件列表中没有文件夹，直接返回false
+     * 2.拼装文件夹ID以及所有子文件夹ID，判断存在即可
+     *
+     * @param prepareRecords
+     * @param targetParentId
+     * @param userId
+     * @return
+     */
+    private boolean checkIsChildFolder(List<GCloudUserFile> prepareRecords, Long targetParentId, Long userId) {
+        prepareRecords = prepareRecords.stream().
+                filter(record -> Objects.equals(record.getFolderFlag(), FolderFlagEnum.YES.getCode()))
+                .collect(Collectors.toList());
+        if(CollectionUtils.isEmpty(prepareRecords)){
+            return false;
+        }
+        List<GCloudUserFile> dbFolderRecords = queryFolderRecords(userId);
+        Map<Long, List<GCloudUserFile>> folderRecordMap = dbFolderRecords.stream()
+                .collect(Collectors.groupingBy(GCloudUserFile::getParentId));
+        ArrayList<GCloudUserFile> unavailableFolderRecords = Lists.newArrayList();
+        unavailableFolderRecords.addAll(prepareRecords);
+        prepareRecords.stream().forEach(record -> findAllChildFolderRecords(unavailableFolderRecords,folderRecordMap,record));
+        List<Long> unavailableFolderRecordsIdList = unavailableFolderRecords.stream()
+                .map(GCloudUserFile::getFileId)
+                .collect(Collectors.toList());
+        return unavailableFolderRecordsIdList.contains(targetParentId);
+    }
+
+
+    /**
+     *  查找文件夹的所有子文件夹记录
+     *
+     * @param unavailableFolderRecords
+     * @param folderRecordMap
+     * @param record
+     */
+    private void findAllChildFolderRecords(ArrayList<GCloudUserFile> unavailableFolderRecords, Map<Long, List<GCloudUserFile>> folderRecordMap, GCloudUserFile record) {
+        if (Objects.isNull(record)) {
+            return;
+        }
+        List<GCloudUserFile> childFolderRecords = folderRecordMap.get(record.getFileId());
+        if(CollectionUtils.isEmpty(childFolderRecords)){
+            return;
+        }
+        unavailableFolderRecords.addAll(childFolderRecords);
+        //递归调用查找子文件夹中的子文件夹
+        childFolderRecords.stream()
+                .forEach(childRecord -> findAllChildFolderRecords(unavailableFolderRecords,folderRecordMap,childRecord));
     }
 }
 

@@ -2,6 +2,7 @@ package com.grazy.modules.file;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Assert;
+import com.google.common.collect.Lists;
 import com.grazy.GCloudServerLauncher;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.utils.IdUtil;
@@ -564,7 +565,6 @@ public class fileTest {
 
         createFolderContext.setFolderName("folder-2-2-1");
         createFolderContext.setParentId(fileId);
-        fileId = gCloudUserFileService.createFolder(createFolderContext);
 
         QueryFolderTreeContext queryFolderTreeContext = new QueryFolderTreeContext();
         queryFolderTreeContext.setUserId(userId);
@@ -572,5 +572,68 @@ public class fileTest {
         for(FolderTreeNodeVo el: folderTree){
             el.print();
         }
+    }
+
+
+    /**
+     * 测试移动文件 -- 成功
+     */
+    @Test
+    public void testTransferSuccess(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+
+        //创建文件夹
+        CreateFolderContext createFolderContext = new CreateFolderContext();
+        createFolderContext.setFolderName("folder-1");
+        createFolderContext.setUserId(userId);
+        createFolderContext.setParentId(info.getRootFileId());
+        Long fileId = gCloudUserFileService.createFolder(createFolderContext);
+
+        createFolderContext.setFolderName("folder-2");
+        Long folder = gCloudUserFileService.createFolder(createFolderContext);
+
+        TransferFileContext transferFileContext = new TransferFileContext();
+        transferFileContext.setTargetParentId(fileId);
+        transferFileContext.setUserId(userId);
+        transferFileContext.setFileIdList(Lists.newArrayList(folder));
+        gCloudUserFileService.transfer(transferFileContext);
+
+        QueryFileListContext queryFileListContext = new QueryFileListContext();
+        queryFileListContext.setParentId(info.getRootFileId());
+        queryFileListContext.setUserId(userId);
+        queryFileListContext.setDelFlag(DelFlagEnum.NO.getCode());
+        List<UserFileVO> records = gCloudUserFileService.getFileList(queryFileListContext);
+        System.out.println("test =========" + records);
+        Assert.notEmpty(records);
+    }
+
+
+    /**
+     * 测试移动文件 -- 失败 目标文件夹是要转移的文件列表中的文件夹或者是其子文件夹
+     */
+    @Test(expected = GCloudBusinessException.class)
+    public void testTransferError(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+
+        //创建文件夹
+        CreateFolderContext createFolderContext = new CreateFolderContext();
+        createFolderContext.setFolderName("folder-1");
+        createFolderContext.setUserId(userId);
+        createFolderContext.setParentId(info.getRootFileId());
+        Long fileId = gCloudUserFileService.createFolder(createFolderContext);
+
+        createFolderContext.setFolderName("folder-2");
+        createFolderContext.setParentId(fileId);
+        Long folder = gCloudUserFileService.createFolder(createFolderContext);
+
+        TransferFileContext transferFileContext = new TransferFileContext();
+        transferFileContext.setTargetParentId(folder);
+        transferFileContext.setUserId(userId);
+        transferFileContext.setFileIdList(Lists.newArrayList(fileId));
+        gCloudUserFileService.transfer(transferFileContext);
     }
 }

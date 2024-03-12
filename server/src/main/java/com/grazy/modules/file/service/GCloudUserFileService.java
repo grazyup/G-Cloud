@@ -125,4 +125,12 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @return
      */
     List<FolderTreeNodeVo> getFolderTree(QueryFolderTreeContext context);
+
+
+    /**
+     * 移动文件
+     *
+     * @param transferFileContext 移动文件上下文参数对象
+     */
+    void transfer(TransferFileContext transferFileContext);
 }
