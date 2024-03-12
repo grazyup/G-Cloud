@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
 import com.grazy.common.event.file.DeleteFileEvent;
+import com.grazy.common.event.search.SearchEvent;
 import com.grazy.common.utils.HttpUtil;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
@@ -339,6 +340,63 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         doCopy(context);
     }
 
+
+    /**
+     * 文件搜索
+     * 1.执行文件搜索
+     * 2.封装文件的父文件夹名称
+     * 3.执行文件搜索后的后置操作
+     *
+     * @param fileSearchContext 文件搜索上下文参数
+     * @return
+     */
+    @Override
+    public List<FileSearchResultVo> search(FileSearchContext fileSearchContext) {
+        List<FileSearchResultVo> fileSearchResultVoList = doSearchFile(fileSearchContext);
+        assembleParentFilename(fileSearchResultVoList);
+        afterSearch(fileSearchContext);
+        return fileSearchResultVoList;
+    }
+
+
+    /**
+     * 执行文件搜索后的后置操作 (发布搜索事件-用于后续的历史搜索)
+     * @param fileSearchContext
+     */
+    private void afterSearch(FileSearchContext fileSearchContext) {
+        SearchEvent searchEvent = new SearchEvent(this, fileSearchContext.getKeyword(), fileSearchContext.getUserId());
+        applicationContext.publishEvent(searchEvent);
+    }
+
+
+    /**
+     * 封装文件的父文件夹名称
+     *
+     * @param fileSearchResultVoList
+     */
+    private void assembleParentFilename(List<FileSearchResultVo> fileSearchResultVoList) {
+        if(CollectionUtils.isEmpty(fileSearchResultVoList)){
+            return;
+        }
+        List<Long> parentIdList = fileSearchResultVoList.stream()
+                .map(FileSearchResultVo::getParentId)
+                .collect(Collectors.toList());
+        List<GCloudFile> parentFileList = gCloudFileService.listByIds(parentIdList);
+        Map<Long, String> parentFileMap = parentFileList.stream()
+                .collect(Collectors.toMap(GCloudFile::getFileId, GCloudFile::getFilename));
+        fileSearchResultVoList.stream().forEach(value -> value.setFilename(parentFileMap.get(value.getParentId())));
+    }
+
+
+    /**
+     * 执行文件搜索
+     *
+     * @param context
+     * @return
+     */
+    private List<FileSearchResultVo> doSearchFile(FileSearchContext context) {
+        return gCloudUserFileMapper.searchFile(context);
+    }
 
 
     /********************************************** private方法 **********************************************/

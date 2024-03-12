@@ -14,10 +14,7 @@ import com.grazy.modules.file.enums.MergeFlagEnum;
 import com.grazy.modules.file.service.GCloudFileChunkService;
 import com.grazy.modules.file.service.GCloudFileService;
 import com.grazy.modules.file.service.GCloudUserFileService;
-import com.grazy.modules.file.vo.FileChunkUploadVO;
-import com.grazy.modules.file.vo.FolderTreeNodeVo;
-import com.grazy.modules.file.vo.UploadChunksVo;
-import com.grazy.modules.file.vo.UserFileVO;
+import com.grazy.modules.file.vo.*;
 import com.grazy.modules.user.context.UserLoginContext;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.service.GCloudUserService;
@@ -697,5 +694,33 @@ public class fileTest {
         copyFileContext.setUserId(userId);
         copyFileContext.setFileIdList(Lists.newArrayList(fileId));
         gCloudUserFileService.copy(copyFileContext);
+    }
+
+
+    /**
+     * 测试文件搜索成功
+     */
+    @Test
+    public void testSearchFileSuccess(){
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name-1");
+
+        Long folder1 = gCloudUserFileService.createFolder(context);
+        Assert.notNull(folder1);
+
+        FileSearchContext fileSearchContext = new FileSearchContext();
+        fileSearchContext.setUserId(userId);
+        fileSearchContext.setKeyword("folder-name");
+        List<FileSearchResultVo> result = gCloudUserFileService.search(fileSearchContext);
+        Assert.notEmpty(result);
+
+        fileSearchContext.setKeyword("name-1");
+        result = gCloudUserFileService.search(fileSearchContext);
+        Assert.isTrue(CollectionUtils.isEmpty(result));
     }
 }

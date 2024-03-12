@@ -3,10 +3,7 @@ package com.grazy.modules.file.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.grazy.modules.file.context.*;
 import com.grazy.modules.file.domain.GCloudUserFile;
-import com.grazy.modules.file.vo.FileChunkUploadVO;
-import com.grazy.modules.file.vo.FolderTreeNodeVo;
-import com.grazy.modules.file.vo.UploadChunksVo;
-import com.grazy.modules.file.vo.UserFileVO;
+import com.grazy.modules.file.vo.*;
 
 import java.util.List;
 
@@ -142,4 +139,12 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      */
     void copy(CopyFileContext copyFileContext);
 
+
+    /**
+     * 文件搜索
+     *
+     * @param fileSearchContext 文件搜索上下文参数
+     * @return
+     */
+    List<FileSearchResultVo> search(FileSearchContext fileSearchContext);
 }

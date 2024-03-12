@@ -1,6 +1,7 @@
 package com.grazy.modules.file.controller;
 
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.grazy.common.utils.UserIdUtil;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.response.R;
@@ -11,12 +12,10 @@ import com.grazy.modules.file.converter.FileConverter;
 import com.grazy.modules.file.enums.DelFlagEnum;
 import com.grazy.modules.file.po.*;
 import com.grazy.modules.file.service.GCloudUserFileService;
-import com.grazy.modules.file.vo.FileChunkUploadVO;
-import com.grazy.modules.file.vo.FolderTreeNodeVo;
-import com.grazy.modules.file.vo.UserFileVO;
-import com.grazy.modules.file.vo.UploadChunksVo;
+import com.grazy.modules.file.vo.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -253,7 +252,7 @@ public class FileController {
             consumes = MediaType.APPLICATION_STREAM_JSON_VALUE,
             produces = MediaType.APPLICATION_STREAM_JSON_VALUE
     )
-    @GetMapping("/file/transfer")
+    @PostMapping("/file/transfer")
     public R<String> transfer(@Validated @RequestBody TransferFilePo transferFilePo){
         TransferFileContext transferFileContext = new TransferFileContext();
         transferFileContext.setTargetParentId(IdUtil.decrypt(transferFilePo.getTargetParentId()));
@@ -275,7 +274,7 @@ public class FileController {
             consumes = MediaType.APPLICATION_STREAM_JSON_VALUE,
             produces = MediaType.APPLICATION_STREAM_JSON_VALUE
     )
-    @GetMapping("/file/copy")
+    @PostMapping("/file/copy")
     public R<String> copy(@Validated @RequestBody CopyFilePo copyFilePo){
         CopyFileContext copyFileContext = new CopyFileContext();
         copyFileContext.setTargetParentId(IdUtil.decrypt(copyFilePo.getTargetParentId()));
@@ -288,5 +287,30 @@ public class FileController {
         copyFileContext.setFileIdList(fileIdList);
         userFileService.copy(copyFileContext);
         return R.success("文件复制成功");
+    }
+
+
+    @ApiOperation(
+            value = "文件搜索",
+            notes = "该接口提供了文件搜索的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("/file/search")
+    public R<List<FileSearchResultVo>> search(@Validated FileSearchPo fileSearchPo){
+        FileSearchContext fileSearchContext = new FileSearchContext();
+        fileSearchContext.setUserId(UserIdUtil.get());
+        fileSearchContext.setKeyword(fileSearchContext.getKeyword());
+        String fileTypes = fileSearchPo.getFileTypes();
+        if(StringUtils.isNotBlank(fileTypes) && !Objects.equals(FileConstants.NO_DETAIL_FOLDER,fileTypes)) {
+            List<Integer> filetypeList = Splitter.on(GCloudConstants.COMMON_SEPARATOR)
+                    .splitToList(fileTypes)
+                    .stream()
+                    .map(Integer::valueOf)
+                    .collect(Collectors.toList());
+            fileSearchContext.setFileTypeList(filetypeList);
+        }
+        List<FileSearchResultVo> result = userFileService.search(fileSearchContext);
+        return R.data(result);
     }
 }

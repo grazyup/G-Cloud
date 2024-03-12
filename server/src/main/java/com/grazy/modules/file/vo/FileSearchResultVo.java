@@ -12,15 +12,15 @@ import java.util.Date;
 
 /**
  * @Author: grazy
- * @Date: 2024-02-18 9:55
- * @Description: 服务器返回前端 文件实体类
+ * @Date: 2024-03-12 17:15
+ * @Description: 文件搜索响应参数
  */
 
-@ApiModel(value = "用户文件列表相应实体")
+@ApiModel(value = "文件搜索响应参数")
 @Data
-public class UserFileVO implements Serializable {
+public class FileSearchResultVo implements Serializable {
 
-    private static final long serialVersionUID = 1585400761787981051L;
+    private static final long serialVersionUID = -6588489517022757512L;
 
     @ApiModelProperty("文件的加密ID")
     @JsonSerialize(using = IdEncryptSerializer.class)
@@ -29,6 +29,9 @@ public class UserFileVO implements Serializable {
     @ApiModelProperty("父文件夹的加密ID")
     @JsonSerialize(using = IdEncryptSerializer.class)
     private Long parentId;
+
+    @ApiModelProperty("父文件夹名称")
+    private String parentFilename;
 
     @ApiModelProperty("文件名称")
     private String filename;
