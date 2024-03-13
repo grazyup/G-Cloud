@@ -1,7 +1,6 @@
 package com.grazy.modules.file.controller;
 
 import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.grazy.common.utils.UserIdUtil;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.response.R;
@@ -311,6 +310,23 @@ public class FileController {
             fileSearchContext.setFileTypeList(filetypeList);
         }
         List<FileSearchResultVo> result = userFileService.search(fileSearchContext);
+        return R.data(result);
+    }
+
+
+    @ApiOperation(
+            value = "查询面包屑列表",
+            notes = "该接口提供了查询面包屑列表的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("/file/breadcrumbs")
+    public R<List<BreadCrumbsVo>> getBreadCrumbs(@NotBlank(message = "文件ID不能为空")
+                                                     @RequestParam(value = "fileId",required = false) String fileId){
+        QueryBreadCrumbsContext queryBreadCrumbsContext = new QueryBreadCrumbsContext();
+        queryBreadCrumbsContext.setFileId(IdUtil.decrypt(fileId));  //是一个文件夹的文件ID
+        queryBreadCrumbsContext.setUserId(UserIdUtil.get());
+        List<BreadCrumbsVo> result = userFileService.getBreadCrumbs(queryBreadCrumbsContext);
         return R.data(result);
     }
 }

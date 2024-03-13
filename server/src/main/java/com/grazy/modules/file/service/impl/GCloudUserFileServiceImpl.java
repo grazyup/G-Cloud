@@ -360,42 +360,30 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
 
 
     /**
-     * 执行文件搜索后的后置操作 (发布搜索事件-用于后续的历史搜索)
-     * @param fileSearchContext
-     */
-    private void afterSearch(FileSearchContext fileSearchContext) {
-        SearchEvent searchEvent = new SearchEvent(this, fileSearchContext.getKeyword(), fileSearchContext.getUserId());
-        applicationContext.publishEvent(searchEvent);
-    }
-
-
-    /**
-     * 封装文件的父文件夹名称
+     * 查询面包屑列表
+     * 1.获取用户的全部文件夹信息
+     * 2.拼接需要用到的面包屑的列表
      *
-     * @param fileSearchResultVoList
-     */
-    private void assembleParentFilename(List<FileSearchResultVo> fileSearchResultVoList) {
-        if(CollectionUtils.isEmpty(fileSearchResultVoList)){
-            return;
-        }
-        List<Long> parentIdList = fileSearchResultVoList.stream()
-                .map(FileSearchResultVo::getParentId)
-                .collect(Collectors.toList());
-        List<GCloudFile> parentFileList = gCloudFileService.listByIds(parentIdList);
-        Map<Long, String> parentFileMap = parentFileList.stream()
-                .collect(Collectors.toMap(GCloudFile::getFileId, GCloudFile::getFilename));
-        fileSearchResultVoList.stream().forEach(value -> value.setFilename(parentFileMap.get(value.getParentId())));
-    }
-
-
-    /**
-     * 执行文件搜索
-     *
-     * @param context
+     * @param queryBreadCrumbsContext 查询面包屑列表上下文参数
      * @return
      */
-    private List<FileSearchResultVo> doSearchFile(FileSearchContext context) {
-        return gCloudUserFileMapper.searchFile(context);
+    @Override
+    public List<BreadCrumbsVo> getBreadCrumbs(QueryBreadCrumbsContext queryBreadCrumbsContext) {
+        List<GCloudUserFile> folderRecords = queryFolderRecords(queryBreadCrumbsContext.getUserId());
+        Map<Long, BreadCrumbsVo> prepareBreadcrumbVOMap = folderRecords.stream()
+                .map(BreadCrumbsVo::transfer)
+                .collect(Collectors.toMap(BreadCrumbsVo::getId, vo -> vo));
+        BreadCrumbsVo currentNode;
+        Long fileId = queryBreadCrumbsContext.getFileId();
+        List<BreadCrumbsVo> result = new LinkedList<>();
+        do {
+            currentNode = prepareBreadcrumbVOMap.get(fileId);
+            if(Objects.nonNull(currentNode)) {
+                result.add(0, currentNode);
+                fileId = currentNode.getParentId();
+            }
+        }while(Objects.nonNull(currentNode));
+        return result;
     }
 
 
@@ -974,6 +962,44 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
     }
 
 
+    /**
+     * 执行文件搜索后的后置操作 (发布搜索事件-用于后续的历史搜索)
+     * @param fileSearchContext
+     */
+    private void afterSearch(FileSearchContext fileSearchContext) {
+        SearchEvent searchEvent = new SearchEvent(this, fileSearchContext.getKeyword(), fileSearchContext.getUserId());
+        applicationContext.publishEvent(searchEvent);
+    }
+
+
+    /**
+     * 封装文件的父文件夹名称
+     *
+     * @param fileSearchResultVoList
+     */
+    private void assembleParentFilename(List<FileSearchResultVo> fileSearchResultVoList) {
+        if(CollectionUtils.isEmpty(fileSearchResultVoList)){
+            return;
+        }
+        List<Long> parentIdList = fileSearchResultVoList.stream()
+                .map(FileSearchResultVo::getParentId)
+                .collect(Collectors.toList());
+        List<GCloudFile> parentFileList = gCloudFileService.listByIds(parentIdList);
+        Map<Long, String> parentFileMap = parentFileList.stream()
+                .collect(Collectors.toMap(GCloudFile::getFileId, GCloudFile::getFilename));
+        fileSearchResultVoList.stream().forEach(value -> value.setFilename(parentFileMap.get(value.getParentId())));
+    }
+
+
+    /**
+     * 执行文件搜索
+     *
+     * @param context
+     * @return
+     */
+    private List<FileSearchResultVo> doSearchFile(FileSearchContext context) {
+        return gCloudUserFileMapper.searchFile(context);
+    }
 }
 
 

@@ -723,4 +723,29 @@ public class fileTest {
         result = gCloudUserFileService.search(fileSearchContext);
         Assert.isTrue(CollectionUtils.isEmpty(result));
     }
+
+    /**
+     * 测试查询文件面包屑导航列表成功
+     */
+    @Test
+    public void testGetBreadcrumbsSuccess() {
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name-1");
+
+        Long folder1 = gCloudUserFileService.createFolder(context);
+        Assert.notNull(folder1);
+
+        QueryBreadCrumbsContext queryBreadcrumbsContext = new QueryBreadCrumbsContext();
+        queryBreadcrumbsContext.setFileId(folder1);
+        queryBreadcrumbsContext.setUserId(userId);
+
+        List<BreadCrumbsVo> result = gCloudUserFileService.getBreadCrumbs(queryBreadcrumbsContext);
+        Assert.notEmpty(result);
+        Assert.isTrue(result.size() == 2);
+    }
 }
