@@ -147,7 +147,7 @@ public class FileController {
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @PostMapping("/file/upload")
-    public R<String> upload(@Validated @RequestBody FileUploadPo fileUploadPo){
+    public R<String> upload(@Validated FileUploadPo fileUploadPo){
         FileUploadContext fileUploadContext = fileConverter.FileUploadPoToFileUploadContext(fileUploadPo);
         userFileService.upload(fileUploadContext);
         return R.success();
@@ -161,7 +161,7 @@ public class FileController {
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @PostMapping("/file/chunk-upload")
-    public R<FileChunkUploadVO> chunkUpload(@Validated @RequestBody FileChunkUploadPo fileChunkUploadPo) {
+    public R<FileChunkUploadVO> chunkUpload(@Validated FileChunkUploadPo fileChunkUploadPo) {
         FileChunkUploadContext fileChunkUploadContext = fileConverter.FileChunkUploadPoToFileChunkUploadContext(fileChunkUploadPo);
         FileChunkUploadVO fileChunkUploadVO = userFileService.chunkUpload(fileChunkUploadContext);
         return R.data(fileChunkUploadVO);
@@ -169,13 +169,13 @@ public class FileController {
 
 
     @ApiOperation(
-            value = "查询已经上传的文件分片列表",
+            value = "查询已经上传的文件分片列表-用于过滤掉已上传的分片",
             notes = "该接口提供了查询已经上传的文件分片列表的功能",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @GetMapping("/file/chunk-upload")
-    public R<UploadChunksVo> getUploadChunks(@Validated @RequestBody QueryUploadChunkPo queryUploadChunkPo){
+    public R<UploadChunksVo> getUploadChunks(@Validated QueryUploadChunkPo queryUploadChunkPo){
         QueryUploadChunkContext context = fileConverter.QueryUploadChunkPoToQueryUploadChunkContext(queryUploadChunkPo);
         UploadChunksVo uploadChunksVo = userFileService.getUploadedChunks(context);
         return R.data(uploadChunksVo);

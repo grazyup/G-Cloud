@@ -17,7 +17,8 @@ spring:
     url: jdbc:mysql://localhost:3306/G-Cloud?characterEncoding=utf8&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
-    host: 192.168.195.100
+#    host: 192.168.195.100
+    host: localhost
     port: 6379
 
 mybatis-plus:
@@ -59,3 +60,11 @@ com:
         init-cache-capacity: 128
         max-cache-capacity: 10000
         all-null-value: true
+
+    storage:
+      engine:
+        fdfs:
+          connect-timeout: 600
+            tracker-list:
+            - 192.168.195.100:22122
+            group: group1
