@@ -13,6 +13,7 @@ import com.grazy.modules.file.po.*;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.*;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.MediaType;
@@ -49,7 +50,7 @@ public class FileController {
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
-    @GetMapping("/file")
+    @GetMapping("/files")
     public R<List<UserFileVO>> list(@NotBlank(message = "父文件夹ID不能为空") @RequestParam(value = "parentId",required = false) String parentId,
                                     @RequestParam(value = "fileType",required = false,defaultValue = FileConstants.ALL_FILE_TYPE) String fileType){
         Long decryptParentId = -1L;
@@ -147,6 +148,7 @@ public class FileController {
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @PostMapping("/file/upload")
+    @ApiImplicitParam(name = "Authorization", value = "Authorization",required = true, dataType = "String",paramType="header")
     public R<String> upload(@Validated FileUploadPo fileUploadPo){
         FileUploadContext fileUploadContext = fileConverter.FileUploadPoToFileUploadContext(fileUploadPo);
         userFileService.upload(fileUploadContext);

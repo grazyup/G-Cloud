@@ -92,8 +92,9 @@ public class FastDFSStorageEngine extends AbstractStorageEngine {
     protected void doReadFile(ReadFileContext context) throws IOException{
         String realPath = context.getRealPath();
         String group = realPath.substring(GCloudConstants.ZERO_INT, realPath.indexOf(GCloudConstants.SLASH_STR));
-        String path = realPath.substring(realPath.indexOf(GCloudConstants.SLASH_STR) + GCloudConstants.ZERO_INT);
-        byte[] bytes = fastFileStorageClient.downloadFile(group, path, new DownloadByteArray());
+        String path = realPath.substring(realPath.indexOf(GCloudConstants.SLASH_STR) + GCloudConstants.ONE_INT);
+        DownloadByteArray downloadByteArray = new DownloadByteArray();
+        byte[] bytes = fastFileStorageClient.downloadFile(group, path, downloadByteArray);
         OutputStream outputStream = context.getOutputStream();
         outputStream.write(bytes);
         outputStream.flush();
