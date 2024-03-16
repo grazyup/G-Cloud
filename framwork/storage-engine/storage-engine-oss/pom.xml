@@ -22,6 +22,18 @@
             <artifactId>G-Cloud-storage-engine-core</artifactId>
             <version>1.0</version>
         </dependency>
+
+        <!--OSS对象存储依赖-->
+        <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+        </dependency>
+
+        <!--配置文件自动提示-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

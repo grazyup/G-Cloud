@@ -59,9 +59,23 @@
         </dependency>
 
         <!--本地文件存储-->
+<!--        <dependency>-->
+<!--            <groupId>com.grazy</groupId>-->
+<!--            <artifactId>G-Cloud-storage-engine-local</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
+
+        <!--FastDFS文件存储-->
+<!--        <dependency>-->
+<!--            <groupId>com.grazy</groupId>-->
+<!--            <artifactId>G-Cloud-storage-engine-fastdfs</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
+
+        <!--阿里云OSS文件存储-->
         <dependency>
             <groupId>com.grazy</groupId>
-            <artifactId>G-Cloud-storage-engine-local</artifactId>
+            <artifactId>G-Cloud-storage-engine-oss</artifactId>
             <version>1.0</version>
         </dependency>
     </dependencies>

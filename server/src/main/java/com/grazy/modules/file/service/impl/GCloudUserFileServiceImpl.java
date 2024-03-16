@@ -288,7 +288,7 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         if(!record.getUserId().equals(context.getUserId())){
             throw new GCloudBusinessException("您没有该文件的操作权限");
         }
-        if(!FolderFlagEnum.YES.getCode().equals(record.getFolderFlag())){
+        if(FolderFlagEnum.YES.getCode().equals(record.getFolderFlag())){
             throw new GCloudBusinessException("文件夹暂不支持下载");
         }
         doPreview(context.getResponse(),record);
@@ -681,7 +681,7 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
      * @param record
      */
     private void doPreview(HttpServletResponse response,GCloudUserFile record) {
-        GCloudFile gCloudFile = gCloudFileService.getById(record.getFileId());
+        GCloudFile gCloudFile = gCloudFileService.getById(record.getRealFileId());
         addCommonResponseHeader(response, gCloudFile.getFilePreviewContentType());
         realFileToOutputStream(gCloudFile.getRealPath(),response);
     }

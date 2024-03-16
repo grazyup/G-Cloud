@@ -63,8 +63,17 @@ com:
 
     storage:
       engine:
-        fdfs:
-          connect-timeout: 600
-            tracker-list:
-            - 192.168.195.100:22122
-            group: group1
+#        fdfs:
+#          connect-timeout: 600
+#          tracker-list:
+#            - 192.168.195.100:22122
+#          group: group1
+
+        oss:
+          access-key-id:
+          access-key-secret:
+          bucket-name:
+          endpoint:
+          auto-create-bucket: true
+
+
