@@ -27,7 +27,7 @@ public class FileUtils {
      * 根据文件名获取文件后缀（携带点）
      */
     public static String getFileSuffix(String filename){
-        if(Strings.isBlank(filename) || filename.indexOf(GCloudConstants.POINT_STR) == GCloudConstants.MINUS_ONE_STR){
+        if(Strings.isBlank(filename) || filename.indexOf(GCloudConstants.POINT_STR) == GCloudConstants.MINUS_ONE_INT){
             return GCloudConstants.EMPTY_STR;
         }
         return filename.substring(filename.indexOf(GCloudConstants.POINT_STR));
@@ -38,7 +38,7 @@ public class FileUtils {
      * 根据文件名获取文件后缀(不带点)
      */
     public static String getFileSuffixNotWithPoint(String filename){
-        if(Strings.isBlank(filename) || filename.indexOf(GCloudConstants.POINT_STR) == GCloudConstants.MINUS_ONE_STR){
+        if(Strings.isBlank(filename) || filename.indexOf(GCloudConstants.POINT_STR) == GCloudConstants.MINUS_ONE_INT){
             return GCloudConstants.EMPTY_STR;
         }
         return filename.substring(filename.indexOf(GCloudConstants.POINT_STR) + 1);

@@ -448,7 +448,7 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
                 newFilenameWithoutSuffix,  //文件名中 文件后缀.的前半部分
                 newFilenameSuffix;      // 文件后缀，包括.
         int filenamePointPosition = filename.lastIndexOf(GCloudConstants.POINT_STR);
-        if (filenamePointPosition == GCloudConstants.MINUS_ONE_STR) {
+        if (filenamePointPosition == GCloudConstants.MINUS_ONE_INT) {
             //没有后缀,是一个文件夹
             newFilenameWithoutSuffix = filename;
             newFilenameSuffix = GCloudConstants.EMPTY_STR;
