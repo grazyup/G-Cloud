@@ -41,6 +41,7 @@ public class OSSStorageEngineConfigProperties {
 
     /**
      * 是否自动创建桶
+     * (如果是false且桶不存在，使用时就会抛异常,反之会根据bucketName自动创建一个桶)
      */
     private boolean autoCreateBucket = Boolean.TRUE;
 
