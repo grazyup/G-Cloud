@@ -15,14 +15,17 @@ import com.grazy.storage.engine.core.AbstractStorageEngine;
 import com.grazy.storage.engine.core.context.*;
 import com.grazy.storage.engine.oss.config.OSSStorageEngineConfigProperties;
 import lombok.*;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @Author: grazy
@@ -148,10 +151,51 @@ public class OSSStorageEngine extends AbstractStorageEngine {
     }
 
 
+    /**
+     * 执行合并分片文件
+     * 1.获取缓存信息，拿到全局的uploadId
+     * 2.从上下文参数信息中获取所有分片的url,解析出需要执行分片合并的参数
+     * 3.执行文件合并
+     * 4.清除缓存中的分片信息对象
+     * 5.设置合并后的文件路径
+     *
+     * @param context
+     * @throws IOException
+     */
     @Override
     protected void doMergeFile(MergeFileContext context) throws IOException {
+        String cacheKey = getCacheKey(context.getIdentifier(), context.getUserId());
+        ChunkUploadEntity chunkUploadEntity = getCache().get(cacheKey, ChunkUploadEntity.class);
+        if (Objects.isNull(chunkUploadEntity)) {
+            throw new GCloudBusinessException("文件合并失败,文件的唯一为:" + context.getIdentifier());
+        }
+        List<String> realPathList = context.getRealPathList();
+        List<PartETag> partETags = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(realPathList)) {
+            partETags = realPathList.stream()
+                    .filter(StringUtils::isNotBlank)
+                    .map(this::analysisUrlParams)
+                    .filter(Objects::isNull)
+                    .filter(jsonObject -> !jsonObject.isEmpty())
+                    .map(jsonObject -> new PartETag(jsonObject.getInteger(PART_NUMBER_KEY),
+                            jsonObject.getString(E_TAG_KEY),
+                            jsonObject.getLong(PART_SIZE_KEY),
+                            jsonObject.getLong(PART_CRC_KEY)))
+                    .collect(Collectors.toList());
+        }
+        CompleteMultipartUploadRequest request = new CompleteMultipartUploadRequest(configProperties.getBucketName(),
+                chunkUploadEntity.getObjectName(), chunkUploadEntity.getUploadId(), partETags);
+        CompleteMultipartUploadResult result = ossClient.completeMultipartUpload(request);
+        if(Objects.isNull(result)){
+            throw new GCloudBusinessException("文件合并失败,文件的唯一为:" + context.getIdentifier());
+        }
 
+        //清除缓存中的分片信息实体
+        getCache().evict(cacheKey);
+        context.setRealPath(chunkUploadEntity.getObjectName());
     }
+
+
 
     @Override
     protected void doReadFile(ReadFileContext context) throws IOException{
