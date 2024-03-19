@@ -74,10 +74,42 @@ public class OSSStorageEngine extends AbstractStorageEngine {
     }
 
 
-
+    /**
+     * 执行删除物理文件
+     * 1.获取需要删除的文件存储路径
+     * 2.如果该存储路径是一个分片的路径，截取出对应的objectName,然后取消分片上传操作
+     * 3.普通文件，直接执行删除操作
+     *
+     * @param context
+     * @throws IOException
+     */
     @Override
     protected void doDelete(DeleteStorageFileContext context) throws IOException {
+        List<String> fileRealPathList = context.getFileRealPathList();
+        fileRealPathList.stream().forEach(realPath ->{
+            if(checkHaveParams(realPath)){
+                //分片文件
+                JSONObject jsonObject = analysisUrlParams(realPath);
+                String identifier = jsonObject.getString(IDENTIFIER_KEY);
+                Long userId = jsonObject.getLong(USER_ID_KEY);
+                String uploadId = jsonObject.getString(UPLOAD_ID_KEY);
+                String cacheKey = getCacheKey(identifier, userId);
 
+                //清除分片信息实体缓存
+                getCache().evict(cacheKey);
+                //取消文件上传
+                try{
+                    AbortMultipartUploadRequest request = new AbortMultipartUploadRequest(configProperties.getBucketName()
+                            , getBaseUrl(realPath), uploadId);
+                    ossClient.abortMultipartUpload(request);
+                }catch (Exception e){
+                    throw new GCloudBusinessException("分片文件删除-取消分片上传操作失败，分片的唯一标识为:" + identifier);
+                }
+            }else {
+                //直接删除普通文件
+                ossClient.deleteObject(configProperties.getBucketName(),realPath);
+            }
+        });
     }
 
 
@@ -196,10 +228,19 @@ public class OSSStorageEngine extends AbstractStorageEngine {
     }
 
 
-
+    /**
+     * 执行文件内容读取操作
+     *
+     * @param context
+     * @throws IOException
+     */
     @Override
     protected void doReadFile(ReadFileContext context) throws IOException{
-
+        OSSObject ossObject = ossClient.getObject(configProperties.getBucketName(), context.getRealPath());
+        if(Objects.isNull(ossObject)){
+            throw new GCloudBusinessException("文件读取失败，文件的名称为：" + context.getRealPath());
+        }
+        FileUtils.writeStreamToStream(context.getOutputStream(),ossObject.getObjectContent());
     }
 
 

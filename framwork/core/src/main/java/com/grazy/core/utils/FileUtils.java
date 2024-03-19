@@ -213,4 +213,22 @@ public class FileUtils {
         fileChannel.close();
         writableByteChannel.close();
     }
+
+
+    /**
+     * 普通文件的流对流传输
+     *
+     * @param outputStream
+     * @param inputStream
+     */
+    public static void writeStreamToStream(OutputStream outputStream, InputStream inputStream) throws IOException{
+        byte[] buffer = new byte[1024];
+        int len;
+        while((len = inputStream.read(buffer)) != GCloudConstants.MINUS_ONE_INT){
+            outputStream.write(buffer,0, len);
+        }
+        outputStream.flush();
+        outputStream.close();
+        inputStream.close();
+    }
 }
