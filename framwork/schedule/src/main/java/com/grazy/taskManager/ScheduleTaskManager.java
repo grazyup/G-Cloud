@@ -5,10 +5,8 @@ import com.grazy.core.utils.UUIDUtil;
 import com.grazy.holder.ScheduleTaskHolder;
 import com.grazy.taskInterface.ScheduleTask;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
@@ -18,7 +16,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
-import java.util.stream.Collectors;
 
 /**
  * @Author: grazy
