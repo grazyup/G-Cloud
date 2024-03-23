@@ -2,6 +2,7 @@ package com.grazy.modules.recycle.service;
 
 import com.grazy.modules.file.vo.UserFileVO;
 import com.grazy.modules.recycle.context.QueryRecycleFileListContext;
+import com.grazy.modules.recycle.context.RestoreContext;
 
 import java.util.List;
 
@@ -19,4 +20,12 @@ public interface GCloudRecycleService {
      * @return
      */
     List<UserFileVO> recycle(QueryRecycleFileListContext queryRecycleFileListContext);
+
+
+    /**
+     * 文件批量还原
+     *
+     * @param restoreContext
+     */
+    void restore(RestoreContext restoreContext);
 }
