@@ -1,6 +1,7 @@
 package com.grazy.modules.recycle.service;
 
 import com.grazy.modules.file.vo.UserFileVO;
+import com.grazy.modules.recycle.context.DeleteContext;
 import com.grazy.modules.recycle.context.QueryRecycleFileListContext;
 import com.grazy.modules.recycle.context.RestoreContext;
 
@@ -28,4 +29,12 @@ public interface GCloudRecycleService {
      * @param restoreContext
      */
     void restore(RestoreContext restoreContext);
+
+
+    /**
+     * 清除回收站文件
+     *
+     * @param context
+     */
+    void delete(DeleteContext context);
 }

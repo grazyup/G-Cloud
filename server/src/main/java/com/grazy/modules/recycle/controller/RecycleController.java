@@ -6,18 +6,17 @@ import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.response.R;
 import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.file.vo.UserFileVO;
+import com.grazy.modules.recycle.context.DeleteContext;
 import com.grazy.modules.recycle.context.QueryRecycleFileListContext;
 import com.grazy.modules.recycle.context.RestoreContext;
+import com.grazy.modules.recycle.po.DeletePo;
 import com.grazy.modules.recycle.po.RestorePo;
 import com.grazy.modules.recycle.service.GCloudRecycleService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -70,6 +69,27 @@ public class RecycleController {
                 .collect(Collectors.toList());
         restoreContext.setFileIdList(fileIds);
         recycleService.restore(restoreContext);
+        return R.success();
+    }
+
+
+    @ApiOperation(
+            value = "删除的文件批量彻底删除",
+            notes = "该接口提供了删除的文件批量彻底删除的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @DeleteMapping("recycle")
+    public R<String> delete(@Validated @RequestBody DeletePo deletePo){
+        DeleteContext context = new DeleteContext();
+        context.setUserId(UserIdUtil.get());
+        List<Long> fileIds = Splitter.on(GCloudConstants.COMMON_SEPARATOR)
+                .splitToList(deletePo.getFileIds())
+                .stream()
+                .map(IdUtil::decrypt)
+                .collect(Collectors.toList());
+        context.setFileIdList(fileIds);
+        recycleService.delete(context);
         return R.success();
     }
 }

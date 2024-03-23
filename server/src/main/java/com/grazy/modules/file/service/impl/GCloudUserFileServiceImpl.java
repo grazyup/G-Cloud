@@ -387,6 +387,33 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
     }
 
 
+    /**
+     * 递归查询所有的子文件信息
+     *
+     * @param records
+     * @return
+     */
+    @Override
+    public List<GCloudUserFile> findAllFileRecords(List<GCloudUserFile> records) {
+        ArrayList<GCloudUserFile> result = Lists.newArrayList(records);
+        if(CollectionUtils.isEmpty(result)){
+            return result;
+        }
+        long folderCount = records.stream()
+                .filter(record -> Objects.equals(record.getFolderFlag(), FolderFlagEnum.YES.getCode()))
+                .count();
+        if(folderCount == 0){
+            return result;
+        }
+        records.stream()
+                .filter(record -> FolderFlagEnum.YES.getCode().equals(record.getFolderFlag()))
+                .forEach(record -> doFindAllChildRecords(result,record));
+        return result;
+    }
+
+
+
+
     /********************************************** private方法 **********************************************/
 
     /**
@@ -825,7 +852,7 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
 
 
     /**
-     * 校验目标文件夹ID是否是操作的文件记录的文件夹ID以及其子文件夹ID
+     * 校验目标文件夹ID是否是操作的文件记录中的文件夹ID以及其子文件夹ID
      * 1.如果操作的文件列表中没有文件夹，直接返回false
      * 2.拼装文件夹ID以及所有子文件夹ID，判断存在即可
      *
@@ -999,6 +1026,43 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
      */
     private List<FileSearchResultVo> doSearchFile(FileSearchContext context) {
         return gCloudUserFileMapper.searchFile(context);
+    }
+
+
+    /**
+     * 递归查询所有的子文件列表
+     * 忽略是否删除的标识
+     *
+     * @param result
+     * @param record
+     */
+    private void doFindAllChildRecords(List<GCloudUserFile> result, GCloudUserFile record) {
+        if(Objects.isNull(record)){
+            return;
+        }
+        if(FolderFlagEnum.NO.getCode().equals(record.getFolderFlag())){
+            return;
+        }
+        List<GCloudUserFile> childRecords = findChildRecordIgnoreDelFlag(record.getFileId());
+        result.addAll(childRecords);
+        childRecords.stream()
+                .filter(childRecord -> FolderFlagEnum.YES.getCode().equals(childRecord.getFolderFlag()))
+                .forEach(childRecord -> doFindAllChildRecords(result,childRecord));
+
+    }
+
+
+    /**
+     * 查询该文件夹下的所有文件记录
+     * 忽略是否删除
+     *
+     * @param fileId
+     * @return
+     */
+    private List<GCloudUserFile> findChildRecordIgnoreDelFlag(Long fileId) {
+        LambdaQueryWrapper<GCloudUserFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(GCloudUserFile::getParentId,fileId);
+        return list(lambdaQueryWrapper);
     }
 }
 

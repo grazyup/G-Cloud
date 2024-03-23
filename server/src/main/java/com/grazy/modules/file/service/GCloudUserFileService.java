@@ -156,4 +156,13 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @return
      */
     List<BreadCrumbsVo> getBreadCrumbs(QueryBreadCrumbsContext queryBreadCrumbsContext);
+
+
+    /**
+     * 递归查询所有的子文件信息
+     *
+     * @param records
+     * @return
+     */
+    List<GCloudUserFile> findAllFileRecords(List<GCloudUserFile> records);
 }

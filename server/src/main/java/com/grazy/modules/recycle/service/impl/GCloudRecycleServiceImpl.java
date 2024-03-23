@@ -1,6 +1,7 @@
 package com.grazy.modules.recycle.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.grazy.common.event.file.FilePhysicalDeleteEvent;
 import com.grazy.common.event.file.FileRestoreEvent;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
@@ -9,6 +10,7 @@ import com.grazy.modules.file.domain.GCloudUserFile;
 import com.grazy.modules.file.enums.DelFlagEnum;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.UserFileVO;
+import com.grazy.modules.recycle.context.DeleteContext;
 import com.grazy.modules.recycle.context.QueryRecycleFileListContext;
 import com.grazy.modules.recycle.context.RestoreContext;
 import com.grazy.modules.recycle.service.GCloudRecycleService;
@@ -42,6 +44,7 @@ public class GCloudRecycleServiceImpl implements GCloudRecycleService, Applicati
         this.applicationContext = applicationContext;
     }
 
+
     /**
      * 获取回收站文件列表
      *
@@ -73,6 +76,25 @@ public class GCloudRecycleServiceImpl implements GCloudRecycleService, Applicati
         doRestore(context);
         afterRestore(context);
     }
+
+
+    /**
+     * 清除回收站文件
+     * 1.校验删除操作权限
+     * 2.递归查询全部的子文件
+     * 3.执行文件删除动作
+     * 4.删除文件的后置操作
+     *
+     * @param context
+     */
+    @Override
+    public void delete(DeleteContext context) {
+        checkFileDeletePermission(context);
+        findAllFileRecords(context);
+        doDelete(context);
+        afterDelete(context);
+    }
+
 
 
 
@@ -156,5 +178,60 @@ public class GCloudRecycleServiceImpl implements GCloudRecycleService, Applicati
             throw new GCloudBusinessException("您无权执行文件还原");
         }
         context.setRecords(records);
+    }
+
+
+    /**
+     * 执行删除文件的后置操作
+     * 1.发送一个文件彻底删除的事件
+     *
+     * @param context
+     */
+    private void afterDelete(DeleteContext context){
+        FilePhysicalDeleteEvent event = new FilePhysicalDeleteEvent(this, context.getAllRecords());
+        applicationContext.publishEvent(event);
+    }
+
+
+    /**
+     * 执行文件删除动作
+     *
+     * @param context
+     */
+    private void doDelete(DeleteContext context) {
+        List<GCloudUserFile> allRecords = context.getAllRecords();
+        List<Long> fileIds = allRecords.stream().map(GCloudUserFile::getFileId).collect(Collectors.toList());
+        if(!userFileService.removeByIds(fileIds)){
+            throw new GCloudBusinessException("文件删除失败");
+        }
+    }
+
+
+    /**
+     * 递归查询全部的子文件
+     *
+     * @param context
+     */
+    private void findAllFileRecords(DeleteContext context) {
+        List<GCloudUserFile> records = context.getRecords();
+        List<GCloudUserFile> allRecords = userFileService.findAllFileRecords(records);
+        context.setAllRecords(allRecords);
+    }
+
+
+    /**
+     * 校验删除操作权限
+     *
+     * @param context
+     */
+    private void checkFileDeletePermission(DeleteContext context) {
+        LambdaQueryWrapper<GCloudUserFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(GCloudUserFile::getUserId,context.getUserId())
+                .in(GCloudUserFile::getFileId,context.getFileIdList());
+        List<GCloudUserFile> list = userFileService.list(lambdaQueryWrapper);
+        if(CollectionUtils.isEmpty(list) || list.size() != context.getFileIdList().size()){
+            throw new GCloudBusinessException("您当前无权限删除该文件");
+        }
+        context.setRecords(list);
     }
 }
