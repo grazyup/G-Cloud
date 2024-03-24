@@ -15,7 +15,6 @@ import com.grazy.modules.recycle.service.GCloudRecycleService;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.service.GCloudUserService;
 import com.grazy.modules.user.vo.UserInfoVo;
-import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;

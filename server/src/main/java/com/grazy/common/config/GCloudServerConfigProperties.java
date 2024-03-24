@@ -2,6 +2,7 @@ package com.grazy.common.config;
 
 import com.grazy.core.constants.GCloudConstants;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -16,9 +17,18 @@ import org.springframework.stereotype.Component;
 @Data
 public class GCloudServerConfigProperties {
 
+    @Value("${server.port}")
+    private String serverPort;
+
     /**
      * 文件分片的过期天数
      */
     private Integer chunkFileExpirationDays = GCloudConstants.ONE_INT;
+
+
+    /**
+     * 文件分享链接URL前缀
+     */
+    private String sharePrefix = "http://127.0.0.1:" + serverPort + "share/";
 
 }

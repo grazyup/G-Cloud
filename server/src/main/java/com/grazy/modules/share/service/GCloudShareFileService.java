@@ -1,5 +1,6 @@
 package com.grazy.modules.share.service;
 
+import com.grazy.modules.share.context.SaveShareFilesContext;
 import com.grazy.modules.share.domain.GCloudShareFile;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -10,4 +11,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface GCloudShareFileService extends IService<GCloudShareFile> {
 
+    /**
+     * 保存分享与文件的关联关系记录
+     *
+     * @param saveShareFilesContext
+     */
+    void saveShareFiles(SaveShareFilesContext saveShareFilesContext);
 }
