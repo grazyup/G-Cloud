@@ -1,9 +1,13 @@
 package com.grazy.modules.share.service;
 
 import com.grazy.modules.share.context.CreateShareUrlContext;
+import com.grazy.modules.share.context.QueryShareListContext;
 import com.grazy.modules.share.domain.GCloudShare;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.grazy.modules.share.vo.GCloudShareUrlListVo;
 import com.grazy.modules.share.vo.GCloudShareUrlVo;
+
+import java.util.List;
 
 /**
 * @author gaofu
@@ -19,4 +23,13 @@ public interface GCloudShareService extends IService<GCloudShare> {
      * @return
      */
     GCloudShareUrlVo create(CreateShareUrlContext context);
+
+
+    /**
+     * 查询分享链接列表
+     *
+     * @param context
+     * @return
+     */
+    List<GCloudShareUrlListVo> getShares(QueryShareListContext context);
 }

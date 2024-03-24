@@ -7,6 +7,7 @@ import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.share.context.CreateShareUrlContext;
+import com.grazy.modules.share.context.QueryShareListContext;
 import com.grazy.modules.share.context.SaveShareFilesContext;
 import com.grazy.modules.share.domain.GCloudShare;
 import com.grazy.modules.share.enums.ShareDayTypeEnum;
@@ -14,12 +15,14 @@ import com.grazy.modules.share.enums.ShareStatusEnum;
 import com.grazy.modules.share.mapper.GCloudShareMapper;
 import com.grazy.modules.share.service.GCloudShareFileService;
 import com.grazy.modules.share.service.GCloudShareService;
+import com.grazy.modules.share.vo.GCloudShareUrlListVo;
 import com.grazy.modules.share.vo.GCloudShareUrlVo;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -36,6 +39,9 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
     @Resource
     private GCloudShareFileService gCloudShareFileService;
 
+    @Resource
+    private GCloudShareMapper gCloudShareMapper;
+
 
     /**
      * 创建分享链接
@@ -51,6 +57,18 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
         saveShare(context);
         saveShareFiles(context);
         return assembleShareVO(context);
+    }
+
+
+    /**
+     * 查询分享链接列表
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public List<GCloudShareUrlListVo> getShares(QueryShareListContext context) {
+        return gCloudShareMapper.selectShareVOListByUserId(context.getUserId());
     }
 
 

@@ -1,18 +1,22 @@
 package com.grazy.modules.share.controller;
 
 import com.google.common.base.Splitter;
+import com.grazy.common.utils.UserIdUtil;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.response.R;
 import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.share.context.CreateShareUrlContext;
+import com.grazy.modules.share.context.QueryShareListContext;
 import com.grazy.modules.share.converter.ShareConverter;
 import com.grazy.modules.share.po.CreateShareUrlPo;
 import com.grazy.modules.share.service.GCloudShareService;
+import com.grazy.modules.share.vo.GCloudShareUrlListVo;
 import com.grazy.modules.share.vo.GCloudShareUrlVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,6 +59,21 @@ public class ShareController {
                 .collect(Collectors.toList());
         context.setShareFileIdList(shareFileIdList);
         GCloudShareUrlVo result = gCloudShareService.create(context);
+        return R.data(result);
+    }
+
+
+    @ApiOperation(
+            value = "查询分享链接列表",
+            notes = "该接口提供了查询分享链接列表的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("/shares")
+    public R<List<GCloudShareUrlListVo>> getShares(){
+        QueryShareListContext context = new QueryShareListContext();
+        context.setUserId(UserIdUtil.get());
+        List<GCloudShareUrlListVo> result = gCloudShareService.getShares(context);
         return R.data(result);
     }
 

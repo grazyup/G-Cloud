@@ -5,9 +5,11 @@ import com.grazy.GCloudServerLauncher;
 import com.grazy.modules.file.context.CreateFolderContext;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.share.context.CreateShareUrlContext;
+import com.grazy.modules.share.context.QueryShareListContext;
 import com.grazy.modules.share.enums.ShareDayTypeEnum;
 import com.grazy.modules.share.enums.ShareTypeEnum;
 import com.grazy.modules.share.service.GCloudShareService;
+import com.grazy.modules.share.vo.GCloudShareUrlListVo;
 import com.grazy.modules.share.vo.GCloudShareUrlVo;
 import com.grazy.modules.user.context.UserRegisterContext;
 import com.grazy.modules.user.service.GCloudUserService;
@@ -20,6 +22,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -78,6 +81,37 @@ public class shareTest {
         createShareUrlContext.setUserId(userId);
         GCloudShareUrlVo gCloudShareUrlVo = gCloudShareService.create(createShareUrlContext);
         Assert.isTrue(Objects.nonNull(gCloudShareUrlVo));
+    }
+
+
+    /**
+     * 测试查询分享文件链接列表 -- 成功
+     */
+    @Test
+    public void testGetShareFileUrlList(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+        //创建文件夹
+        CreateFolderContext createFolderContext = new CreateFolderContext();
+        createFolderContext.setFolderName("TestCreateFolderName");
+        createFolderContext.setUserId(userId);
+        createFolderContext.setParentId(info.getRootFileId());
+        Long fileId = gCloudUserFileService.createFolder(createFolderContext);
+        //分享
+        CreateShareUrlContext createShareUrlContext = new CreateShareUrlContext();
+        createShareUrlContext.setShareName("测试分享");
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setUserId(userId);
+        GCloudShareUrlVo gCloudShareUrlVo = gCloudShareService.create(createShareUrlContext);
+        Assert.isTrue(Objects.nonNull(gCloudShareUrlVo));
+        //获取分享列表
+        QueryShareListContext queryShareListContext = new QueryShareListContext();
+        queryShareListContext.setUserId(userId);
+        List<GCloudShareUrlListVo> shares = gCloudShareService.getShares(queryShareListContext);
+        Assert.notEmpty(shares);
     }
 
 }

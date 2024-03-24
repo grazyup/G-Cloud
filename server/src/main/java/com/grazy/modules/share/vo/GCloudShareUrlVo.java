@@ -1,5 +1,7 @@
 package com.grazy.modules.share.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.grazy.web.serializable.IdEncryptSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -22,6 +24,7 @@ public class GCloudShareUrlVo implements Serializable {
     private String shareName;
 
     @ApiModelProperty("分享链接的ID")
+    @JsonSerialize(using = IdEncryptSerializer.class)
     private Long shareId;
 
     @ApiModelProperty("分享链接的URL")

@@ -2,6 +2,10 @@ package com.grazy.modules.share.mapper;
 
 import com.grazy.modules.share.domain.GCloudShare;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.grazy.modules.share.vo.GCloudShareUrlListVo;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
 * @author gaofu
@@ -11,6 +15,14 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 */
 public interface GCloudShareMapper extends BaseMapper<GCloudShare> {
 
+
+    /**
+     * 根据用户ID查询当前用户的分享链接列表
+     *
+     * @param userId
+     * @return
+     */
+    List<GCloudShareUrlListVo> selectShareVOListByUserId(@Param("userId") Long userId);
 }
 
 
