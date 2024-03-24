@@ -1,15 +1,18 @@
 package com.grazy.modules.share.service.impl;
 
 import cn.hutool.core.date.DateUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.grazy.common.config.GCloudServerConfigProperties;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.utils.IdUtil;
+import com.grazy.modules.share.context.CancelShareContext;
 import com.grazy.modules.share.context.CreateShareUrlContext;
 import com.grazy.modules.share.context.QueryShareListContext;
 import com.grazy.modules.share.context.SaveShareFilesContext;
 import com.grazy.modules.share.domain.GCloudShare;
+import com.grazy.modules.share.domain.GCloudShareFile;
 import com.grazy.modules.share.enums.ShareDayTypeEnum;
 import com.grazy.modules.share.enums.ShareStatusEnum;
 import com.grazy.modules.share.mapper.GCloudShareMapper;
@@ -19,6 +22,8 @@ import com.grazy.modules.share.vo.GCloudShareUrlListVo;
 import com.grazy.modules.share.vo.GCloudShareUrlVo;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -52,6 +57,7 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
      * @param context
      * @return
      */
+    @Transactional(rollbackFor = GCloudBusinessException.class)
     @Override
     public GCloudShareUrlVo create(CreateShareUrlContext context) {
         saveShare(context);
@@ -70,6 +76,25 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
     public List<GCloudShareUrlListVo> getShares(QueryShareListContext context) {
         return gCloudShareMapper.selectShareVOListByUserId(context.getUserId());
     }
+
+
+    /**
+     * 取消分享链接
+     *  1.校验当前用户是否有取消权限
+     *  2.删除对应的分享记录
+     *  3.删除对应的分享文件关联关系记录
+     *
+     * @param context
+     */
+    @Transactional(rollbackFor = GCloudBusinessException.class)
+    @Override
+    public void cancelShare(CancelShareContext context) {
+        checkUserCancelSharePermission(context);
+        doDeleteShare(context);
+        doDeleteShareFile(context);
+    }
+
+
 
 
     /********************************************** private方法 **********************************************/
@@ -162,6 +187,53 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
             sharePrefix = sharePrefix + GCloudConstants.SLASH_STR;
         }
         return sharePrefix + shareId;
+    }
+
+
+    /**
+     * 删除对应的分享文件关联关系记录
+     *
+     * @param context
+     */
+    private void doDeleteShareFile(CancelShareContext context) {
+        LambdaQueryWrapper<GCloudShareFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(GCloudShareFile::getCreateUser,context.getUserId())
+                .in(GCloudShareFile::getShareId,context.getShareIdList());
+        if(!gCloudShareFileService.remove(lambdaQueryWrapper)){
+            throw new GCloudBusinessException("取消分享失败");
+        }
+    }
+
+
+    /**
+     * 执行取消文件分享的动作
+     *
+     * @param context
+     */
+    private void doDeleteShare(CancelShareContext context) {
+        List<Long> shareIdList = context.getShareIdList();
+        if (!removeByIds(shareIdList)) {
+            throw new GCloudBusinessException("取消分享失败");
+        }
+    }
+
+
+    /**
+     * 校验当前用户是否有取消权限
+     *
+     * @param context
+     */
+    private void checkUserCancelSharePermission(CancelShareContext context) {
+        List<Long> shareIdList = context.getShareIdList();
+        List<GCloudShare> records = listByIds(shareIdList);
+        if(CollectionUtils.isEmpty(records)){
+            throw new GCloudBusinessException("分享链接不存在");
+        }
+        records.stream().forEach(record -> {
+            if(!Objects.equals(record.getCreateUser(),context.getUserId())){
+                throw new GCloudBusinessException("当前用户暂无取消此分享链接的权限");
+            }
+        });
     }
 }
 

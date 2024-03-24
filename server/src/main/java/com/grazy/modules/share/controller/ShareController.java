@@ -5,9 +5,11 @@ import com.grazy.common.utils.UserIdUtil;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.response.R;
 import com.grazy.core.utils.IdUtil;
+import com.grazy.modules.share.context.CancelShareContext;
 import com.grazy.modules.share.context.CreateShareUrlContext;
 import com.grazy.modules.share.context.QueryShareListContext;
 import com.grazy.modules.share.converter.ShareConverter;
+import com.grazy.modules.share.po.CancelSharePo;
 import com.grazy.modules.share.po.CreateShareUrlPo;
 import com.grazy.modules.share.service.GCloudShareService;
 import com.grazy.modules.share.vo.GCloudShareUrlListVo;
@@ -16,10 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -77,4 +76,24 @@ public class ShareController {
         return R.data(result);
     }
 
+
+    @ApiOperation(
+            value = "取消分享链接",
+            notes = "该接口提供了取消分享链接的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @DeleteMapping("/share")
+    public R<String> cancelShare(@Validated @RequestBody CancelSharePo cancelSharePo){
+        CancelShareContext context = new CancelShareContext();
+        context.setUserId(UserIdUtil.get());
+        List<Long> shareIdList = Splitter.on(GCloudConstants.COMMON_SEPARATOR)
+                .splitToList(cancelSharePo.getShareIds())
+                .stream()
+                .map(IdUtil::decrypt)
+                .collect(Collectors.toList());
+        context.setShareIdList(shareIdList);
+        gCloudShareService.cancelShare(context);
+        return R.success();
+    }
 }

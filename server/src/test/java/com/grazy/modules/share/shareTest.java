@@ -4,6 +4,7 @@ import cn.hutool.core.lang.Assert;
 import com.grazy.GCloudServerLauncher;
 import com.grazy.modules.file.context.CreateFolderContext;
 import com.grazy.modules.file.service.GCloudUserFileService;
+import com.grazy.modules.share.context.CancelShareContext;
 import com.grazy.modules.share.context.CreateShareUrlContext;
 import com.grazy.modules.share.context.QueryShareListContext;
 import com.grazy.modules.share.enums.ShareDayTypeEnum;
@@ -20,6 +21,7 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -114,4 +116,43 @@ public class shareTest {
         Assert.notEmpty(shares);
     }
 
+
+    /**
+     * 测试取消文件分享链接 -- 成功
+     */
+    @Test
+    public void testCancelShareFileUrlSuccess(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+        //创建文件夹
+        CreateFolderContext createFolderContext = new CreateFolderContext();
+        createFolderContext.setFolderName("TestCreateFolderName");
+        createFolderContext.setUserId(userId);
+        createFolderContext.setParentId(info.getRootFileId());
+        Long fileId = gCloudUserFileService.createFolder(createFolderContext);
+        //分享
+        CreateShareUrlContext createShareUrlContext = new CreateShareUrlContext();
+        createShareUrlContext.setShareName("测试分享");
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setUserId(userId);
+        GCloudShareUrlVo gCloudShareUrlVo = gCloudShareService.create(createShareUrlContext);
+        Assert.isTrue(Objects.nonNull(gCloudShareUrlVo));
+        //获取分享列表
+        QueryShareListContext queryShareListContext = new QueryShareListContext();
+        queryShareListContext.setUserId(userId);
+        List<GCloudShareUrlListVo> shares = gCloudShareService.getShares(queryShareListContext);
+        Assert.notEmpty(shares);
+        //取消分享
+        CancelShareContext cancelShareContext = new CancelShareContext();
+        cancelShareContext.setUserId(userId);
+        cancelShareContext.setShareIdList(Lists.newArrayList(gCloudShareUrlVo.getShareId()));
+        gCloudShareService.cancelShare(cancelShareContext);
+
+        //重新查询分享链接列表
+        shares = gCloudShareService.getShares(queryShareListContext);
+        Assert.isTrue(CollectionUtils.isEmpty(shares));
+    }
 }
