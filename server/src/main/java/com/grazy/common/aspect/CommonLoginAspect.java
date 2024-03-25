@@ -52,8 +52,9 @@ public class CommonLoginAspect {
      */
     private static final String LOGIN_AUTH_REQUEST_HEADER_NAME = "Authorization";
 
+
     /**
-     * 切入点表达式
+     * 切入点表达式(execution -- 每一个接口都扫描)
      */
     private static final String POINT_CUT = "execution(* com.grazy.modules.*.controller..*(..))";
 
@@ -109,6 +110,9 @@ public class CommonLoginAspect {
         if(StringUtils.isBlank(accessToken)){
             //获取参数方式传递的token
             accessToken = request.getParameter(LOGIN_AUTH_PARAM_NAME);
+        }
+        if(StringUtils.isBlank(accessToken)){
+            return false;
         }
         Object userId = JwtUtil.analyzeToken(accessToken, UserConstant.LOGIN_USER_ID);
         if(Objects.isNull(userId)){
