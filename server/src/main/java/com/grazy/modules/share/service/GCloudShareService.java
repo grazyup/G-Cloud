@@ -1,6 +1,7 @@
 package com.grazy.modules.share.service;
 
 import com.grazy.modules.share.context.CancelShareContext;
+import com.grazy.modules.share.context.CheckShareCodeContext;
 import com.grazy.modules.share.context.CreateShareUrlContext;
 import com.grazy.modules.share.context.QueryShareListContext;
 import com.grazy.modules.share.domain.GCloudShare;
@@ -41,4 +42,13 @@ public interface GCloudShareService extends IService<GCloudShare> {
      * @param context
      */
     void cancelShare(CancelShareContext context);
+
+
+    /**
+     * 校验分享提取码
+     *
+     * @param context
+     * @return
+     */
+    String checkShareCode(CheckShareCodeContext context);
 }

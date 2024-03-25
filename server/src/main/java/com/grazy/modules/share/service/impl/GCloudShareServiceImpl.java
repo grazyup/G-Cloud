@@ -6,11 +6,12 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.grazy.common.config.GCloudServerConfigProperties;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
+import com.grazy.core.response.ResponseCode;
 import com.grazy.core.utils.IdUtil;
-import com.grazy.modules.share.context.CancelShareContext;
-import com.grazy.modules.share.context.CreateShareUrlContext;
-import com.grazy.modules.share.context.QueryShareListContext;
-import com.grazy.modules.share.context.SaveShareFilesContext;
+import com.grazy.core.utils.JwtUtil;
+import com.grazy.core.utils.UUIDUtil;
+import com.grazy.modules.share.constants.ShareConstant;
+import com.grazy.modules.share.context.*;
 import com.grazy.modules.share.domain.GCloudShare;
 import com.grazy.modules.share.domain.GCloudShareFile;
 import com.grazy.modules.share.enums.ShareDayTypeEnum;
@@ -92,6 +93,23 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
         checkUserCancelSharePermission(context);
         doDeleteShare(context);
         doDeleteShareFile(context);
+    }
+
+
+    /**
+     * 校验分享提取码
+     * 1.检查分享的状态是不是正常
+     * 2.检查分享提取码是否正确
+     * 3.生成一个短时间的分享token并返回
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public String checkShareCode(CheckShareCodeContext context) {
+        checkShareStatus(context);
+        doCheckShareCode(context);
+        return generateShareToken(context);
     }
 
 
@@ -234,6 +252,57 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
                 throw new GCloudBusinessException("当前用户暂无取消此分享链接的权限");
             }
         });
+    }
+
+
+    /**
+     * 构建一个短期临时分享token
+     *
+     * @param context
+     * @return
+     */
+    private String generateShareToken(CheckShareCodeContext context) {
+        return JwtUtil.generateToken(UUIDUtil.getUUID(), ShareConstant.SHARE_ID,
+                context.getShareId(), ShareConstant.ONE_HOUR_LONG);
+    }
+
+
+    /**
+     * 检查分享提取码是否正确
+     *
+     * @param context
+     */
+    private void doCheckShareCode(CheckShareCodeContext context) {
+        GCloudShare record = context.getRecord();
+        if(!Objects.equals(context.getShareCode(),record.getShareCode())){
+            throw new GCloudBusinessException("提取码错误");
+        }
+    }
+
+
+    /**
+     * 检查分享的状态是不是正常
+     *
+     * @param context
+     */
+    private void checkShareStatus(CheckShareCodeContext context) {
+        Long shareId = context.getShareId();
+        GCloudShare record = getById(shareId);
+        if(Objects.isNull(record)){
+            throw new GCloudBusinessException(ResponseCode.SHARE_CANCELLED);
+        }
+        if(Objects.equals(ShareStatusEnum.FILE_DELETED.getCode(),record.getShareStatus())){
+            throw new GCloudBusinessException(ResponseCode.SHARE_FILE_MISS);
+        }
+        if(Objects.equals(ShareDayTypeEnum.PERMANENT_VALIDITY.getCode(), record.getShareDayType())){
+            //如果为永久有效,直接封装记录到上下文参数中，并返回，不需要执行过期时间判断
+            context.setRecord(record);
+            return;
+        }
+        if(record.getShareEndTime().before(new Date())){
+            throw new GCloudBusinessException(ResponseCode.SHARE_EXPIRE);
+        }
+        context.setRecord(record);
     }
 }
 

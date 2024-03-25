@@ -1,15 +1,18 @@
 package com.grazy.modules.share.controller;
 
 import com.google.common.base.Splitter;
+import com.grazy.common.annotation.LoginIgnore;
 import com.grazy.common.utils.UserIdUtil;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.response.R;
 import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.share.context.CancelShareContext;
+import com.grazy.modules.share.context.CheckShareCodeContext;
 import com.grazy.modules.share.context.CreateShareUrlContext;
 import com.grazy.modules.share.context.QueryShareListContext;
 import com.grazy.modules.share.converter.ShareConverter;
 import com.grazy.modules.share.po.CancelSharePo;
+import com.grazy.modules.share.po.CheckShareCodePo;
 import com.grazy.modules.share.po.CreateShareUrlPo;
 import com.grazy.modules.share.service.GCloudShareService;
 import com.grazy.modules.share.vo.GCloudShareUrlListVo;
@@ -95,5 +98,22 @@ public class ShareController {
         context.setShareIdList(shareIdList);
         gCloudShareService.cancelShare(context);
         return R.success();
+    }
+
+
+    @ApiOperation(
+            value = "校验分享提取码",
+            notes = "该接口提供校验分享提取码的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @PostMapping("share/code/check")
+    public R<String> checkShareCode(@Validated @RequestBody CheckShareCodePo checkShareCodePo){
+        CheckShareCodeContext context = new CheckShareCodeContext();
+        context.setShareId(IdUtil.decrypt(checkShareCodePo.getShareId()));
+        context.setShareCode(checkShareCodePo.getShareCode());
+        String token = gCloudShareService.checkShareCode(context);
+        return R.data(token);
     }
 }

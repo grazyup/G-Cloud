@@ -2,9 +2,11 @@ package com.grazy.modules.share;
 
 import cn.hutool.core.lang.Assert;
 import com.grazy.GCloudServerLauncher;
+import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.modules.file.context.CreateFolderContext;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.share.context.CancelShareContext;
+import com.grazy.modules.share.context.CheckShareCodeContext;
 import com.grazy.modules.share.context.CreateShareUrlContext;
 import com.grazy.modules.share.context.QueryShareListContext;
 import com.grazy.modules.share.enums.ShareDayTypeEnum;
@@ -154,5 +156,121 @@ public class shareTest {
         //重新查询分享链接列表
         shares = gCloudShareService.getShares(queryShareListContext);
         Assert.isTrue(CollectionUtils.isEmpty(shares));
+    }
+
+
+    /**
+     * 检验分享提取码 -- 成功
+     */
+    @Test
+    public void testCheckShareCodeSuccess(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+        //创建文件夹
+        CreateFolderContext createFolderContext = new CreateFolderContext();
+        createFolderContext.setFolderName("TestCreateFolderName");
+        createFolderContext.setUserId(userId);
+        createFolderContext.setParentId(info.getRootFileId());
+        Long fileId = gCloudUserFileService.createFolder(createFolderContext);
+        //分享
+        CreateShareUrlContext createShareUrlContext = new CreateShareUrlContext();
+        createShareUrlContext.setShareName("测试分享");
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setUserId(userId);
+        GCloudShareUrlVo gCloudShareUrlVo = gCloudShareService.create(createShareUrlContext);
+        Assert.isTrue(Objects.nonNull(gCloudShareUrlVo));
+        //获取分享列表
+        QueryShareListContext queryShareListContext = new QueryShareListContext();
+        queryShareListContext.setUserId(userId);
+        List<GCloudShareUrlListVo> shares = gCloudShareService.getShares(queryShareListContext);
+        Assert.notEmpty(shares);
+        //校验分享提取码
+        CheckShareCodeContext checkShareCodeContext = new CheckShareCodeContext();
+        checkShareCodeContext.setShareCode(gCloudShareUrlVo.getShareCode());
+        checkShareCodeContext.setShareId(gCloudShareUrlVo.getShareId());
+        String token = gCloudShareService.checkShareCode(checkShareCodeContext);
+        Assert.notBlank(token);
+    }
+
+
+    /**
+     * 检验分享提取码 -- 错误验证码
+     */
+    @Test(expected = GCloudBusinessException.class)
+    public void testCheckShareCodeFailByErrorShareCode(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+        //创建文件夹
+        CreateFolderContext createFolderContext = new CreateFolderContext();
+        createFolderContext.setFolderName("TestCreateFolderName");
+        createFolderContext.setUserId(userId);
+        createFolderContext.setParentId(info.getRootFileId());
+        Long fileId = gCloudUserFileService.createFolder(createFolderContext);
+        //分享
+        CreateShareUrlContext createShareUrlContext = new CreateShareUrlContext();
+        createShareUrlContext.setShareName("测试分享");
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setUserId(userId);
+        GCloudShareUrlVo gCloudShareUrlVo = gCloudShareService.create(createShareUrlContext);
+        Assert.isTrue(Objects.nonNull(gCloudShareUrlVo));
+        //获取分享列表
+        QueryShareListContext queryShareListContext = new QueryShareListContext();
+        queryShareListContext.setUserId(userId);
+        List<GCloudShareUrlListVo> shares = gCloudShareService.getShares(queryShareListContext);
+        Assert.notEmpty(shares);
+        //校验分享提取码
+        CheckShareCodeContext checkShareCodeContext = new CheckShareCodeContext();
+        checkShareCodeContext.setShareCode(gCloudShareUrlVo.getShareCode() + "_change");
+        checkShareCodeContext.setShareId(gCloudShareUrlVo.getShareId());
+        String token = gCloudShareService.checkShareCode(checkShareCodeContext);
+        Assert.notBlank(token);
+    }
+
+
+    /**
+     * 检验分享提取码 -- 分享链接被删除
+     */
+    @Test(expected = GCloudBusinessException.class)
+    public void testCheckShareCodeFailByDelShare(){
+        //注册用户
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+        //创建文件夹
+        CreateFolderContext createFolderContext = new CreateFolderContext();
+        createFolderContext.setFolderName("TestCreateFolderName");
+        createFolderContext.setUserId(userId);
+        createFolderContext.setParentId(info.getRootFileId());
+        Long fileId = gCloudUserFileService.createFolder(createFolderContext);
+        //分享
+        CreateShareUrlContext createShareUrlContext = new CreateShareUrlContext();
+        createShareUrlContext.setShareName("测试分享");
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setUserId(userId);
+        GCloudShareUrlVo gCloudShareUrlVo = gCloudShareService.create(createShareUrlContext);
+        Assert.isTrue(Objects.nonNull(gCloudShareUrlVo));
+        //获取分享列表
+        QueryShareListContext queryShareListContext = new QueryShareListContext();
+        queryShareListContext.setUserId(userId);
+        List<GCloudShareUrlListVo> shares = gCloudShareService.getShares(queryShareListContext);
+        Assert.notEmpty(shares);
+        //取消分享
+        CancelShareContext cancelShareContext = new CancelShareContext();
+        cancelShareContext.setUserId(userId);
+        cancelShareContext.setShareIdList(Lists.newArrayList(gCloudShareUrlVo.getShareId()));
+        gCloudShareService.cancelShare(cancelShareContext);
+        //校验分享提取码
+        CheckShareCodeContext checkShareCodeContext = new CheckShareCodeContext();
+        checkShareCodeContext.setShareCode(gCloudShareUrlVo.getShareCode() + "_change");
+        checkShareCodeContext.setShareId(gCloudShareUrlVo.getShareId());
+        String token = gCloudShareService.checkShareCode(checkShareCodeContext);
+        Assert.notBlank(token);
     }
 }
