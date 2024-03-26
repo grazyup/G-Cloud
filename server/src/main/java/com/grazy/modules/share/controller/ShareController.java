@@ -2,14 +2,13 @@ package com.grazy.modules.share.controller;
 
 import com.google.common.base.Splitter;
 import com.grazy.common.annotation.LoginIgnore;
+import com.grazy.common.annotation.NeedShareToken;
+import com.grazy.common.utils.ShareIdUtil;
 import com.grazy.common.utils.UserIdUtil;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.response.R;
 import com.grazy.core.utils.IdUtil;
-import com.grazy.modules.share.context.CancelShareContext;
-import com.grazy.modules.share.context.CheckShareCodeContext;
-import com.grazy.modules.share.context.CreateShareUrlContext;
-import com.grazy.modules.share.context.QueryShareListContext;
+import com.grazy.modules.share.context.*;
 import com.grazy.modules.share.converter.ShareConverter;
 import com.grazy.modules.share.po.CancelSharePo;
 import com.grazy.modules.share.po.CheckShareCodePo;
@@ -17,6 +16,7 @@ import com.grazy.modules.share.po.CreateShareUrlPo;
 import com.grazy.modules.share.service.GCloudShareService;
 import com.grazy.modules.share.vo.GCloudShareUrlListVo;
 import com.grazy.modules.share.vo.GCloudShareUrlVo;
+import com.grazy.modules.share.vo.ShareDetailVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
@@ -115,5 +115,22 @@ public class ShareController {
         context.setShareCode(checkShareCodePo.getShareCode());
         String token = gCloudShareService.checkShareCode(context);
         return R.data(token);
+    }
+
+
+    @ApiOperation(
+            value = "获取分享详情",
+            notes = "该接口提供获取分享详情的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @NeedShareToken
+    @GetMapping("/share")
+    public R<ShareDetailVo> detail(){
+        QueryShareDetailContext context = new QueryShareDetailContext();
+        context.setShareId(ShareIdUtil.get());
+        ShareDetailVo result = gCloudShareService.detail(context);
+        return R.data(result);
     }
 }

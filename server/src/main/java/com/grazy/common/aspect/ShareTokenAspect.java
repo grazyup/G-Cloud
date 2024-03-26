@@ -44,7 +44,7 @@ public class ShareTokenAspect {
     /**
      * 切入点表达式(annotation -- 仅扫描标注该注解的接口)
      */
-    private static final String POINT_CUT = "annotation(com.grazy.common.annotation.NeedShareToken)";
+    private static final String POINT_CUT = "@annotation(com.grazy.common.annotation.NeedShareToken)";
 
 
 

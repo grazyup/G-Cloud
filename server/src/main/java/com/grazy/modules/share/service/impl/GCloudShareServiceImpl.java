@@ -10,6 +10,10 @@ import com.grazy.core.response.ResponseCode;
 import com.grazy.core.utils.IdUtil;
 import com.grazy.core.utils.JwtUtil;
 import com.grazy.core.utils.UUIDUtil;
+import com.grazy.modules.file.context.QueryFileListContext;
+import com.grazy.modules.file.enums.DelFlagEnum;
+import com.grazy.modules.file.service.GCloudUserFileService;
+import com.grazy.modules.file.vo.UserFileVO;
 import com.grazy.modules.share.constants.ShareConstant;
 import com.grazy.modules.share.context.*;
 import com.grazy.modules.share.domain.GCloudShare;
@@ -21,6 +25,10 @@ import com.grazy.modules.share.service.GCloudShareFileService;
 import com.grazy.modules.share.service.GCloudShareService;
 import com.grazy.modules.share.vo.GCloudShareUrlListVo;
 import com.grazy.modules.share.vo.GCloudShareUrlVo;
+import com.grazy.modules.share.vo.ShareDetailVo;
+import com.grazy.modules.share.vo.ShareUserInfoVo;
+import com.grazy.modules.user.domain.GCloudUser;
+import com.grazy.modules.user.service.GCloudUserService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +55,12 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
 
     @Resource
     private GCloudShareMapper gCloudShareMapper;
+
+    @Resource
+    private GCloudUserFileService gCloudUserFileService;
+
+    @Resource
+    private GCloudUserService gCloudUserService;
 
 
     /**
@@ -107,9 +121,33 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
      */
     @Override
     public String checkShareCode(CheckShareCodeContext context) {
-        checkShareStatus(context);
+        GCloudShare record = checkShareStatus(context.getShareId());
+        context.setRecord(record);
         doCheckShareCode(context);
         return generateShareToken(context);
+    }
+
+
+    /**
+     * 获取分享详情
+     * 1.校验分享链接的状态
+     * 2.封装分享的主体信息
+     * 3.封装分享文件信息列表
+     * 4.封装分享文件的用户的信息
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public ShareDetailVo detail(QueryShareDetailContext context) {
+        GCloudShare record = checkShareStatus(context.getShareId());
+        context.setRecord(record);
+        ShareDetailVo shareDetailVo = new ShareDetailVo();
+        context.setShareDetailVo(shareDetailVo);
+        assembleShareInfo(context);
+        assembleShareFileInfo(context);
+        assembleShareUserInfo(context);
+        return context.getShareDetailVo();
     }
 
 
@@ -283,10 +321,9 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
     /**
      * 检查分享的状态是不是正常
      *
-     * @param context
+     * @param shareId
      */
-    private void checkShareStatus(CheckShareCodeContext context) {
-        Long shareId = context.getShareId();
+    private GCloudShare checkShareStatus(Long shareId) {
         GCloudShare record = getById(shareId);
         if(Objects.isNull(record)){
             throw new GCloudBusinessException(ResponseCode.SHARE_CANCELLED);
@@ -295,14 +332,98 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
             throw new GCloudBusinessException(ResponseCode.SHARE_FILE_MISS);
         }
         if(Objects.equals(ShareDayTypeEnum.PERMANENT_VALIDITY.getCode(), record.getShareDayType())){
-            //如果为永久有效,直接封装记录到上下文参数中，并返回，不需要执行过期时间判断
-            context.setRecord(record);
-            return;
+            //如果为永久有效,直接返回，不需要执行过期时间判断
+            return record;
         }
         if(record.getShareEndTime().before(new Date())){
             throw new GCloudBusinessException(ResponseCode.SHARE_EXPIRE);
         }
-        context.setRecord(record);
+        return record;
+    }
+
+
+    /**
+     * 封装分享的主体信息
+     *
+     * @param context
+     */
+    private void assembleShareInfo(QueryShareDetailContext context) {
+        ShareDetailVo shareDetailVo = context.getShareDetailVo();
+        GCloudShare record = context.getRecord();
+
+        shareDetailVo.setShareId(context.getShareId());
+        shareDetailVo.setShareName(record.getShareName());
+        shareDetailVo.setShareDay(record.getShareDay());
+        shareDetailVo.setShareEndTime(record.getShareEndTime());
+        shareDetailVo.setCreateTime(record.getCreateTime());
+    }
+
+
+    /**
+     * 封装分享文件信息列表
+     * 1.根据shareId查询fileId列表
+     * 2.根据fileId查询用户文件信息列表集合
+     * 3.封装vo中的文件详情列表信息
+     *
+     * @param context
+     */
+    private void assembleShareFileInfo(QueryShareDetailContext context) {
+        List<Long> fileIdList = getShareFileIdList(context.getShareId());
+
+        QueryFileListContext queryFileListContext = new QueryFileListContext();
+        queryFileListContext.setDelFlag(DelFlagEnum.NO.getCode());
+        queryFileListContext.setFileIdList(fileIdList);
+        queryFileListContext.setUserId(context.getRecord().getCreateUser());
+
+        List<UserFileVO> fileList = gCloudUserFileService.getFileList(queryFileListContext);
+        context.getShareDetailVo().setUserFileVOList(fileList);
+    }
+
+
+    /**
+     * 根据分享ID查询对应的文件ID列表
+     *
+     * @param shareId
+     * @return
+     */
+    private List<Long> getShareFileIdList(Long shareId) {
+        LambdaQueryWrapper<GCloudShareFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.select(GCloudShareFile::getFileId);
+        lambdaQueryWrapper.eq(GCloudShareFile::getShareId, shareId);
+        return gCloudShareFileService.listObjs(lambdaQueryWrapper, value -> (Long) value);
+    }
+
+
+    /**
+     * 封装分享文件的用户的信息
+     *
+     * @param context
+     */
+    private void assembleShareUserInfo(QueryShareDetailContext context) {
+        Long createUser = context.getRecord().getCreateUser();
+        GCloudUser dbCreateUser = gCloudUserService.getById(createUser);
+        if(Objects.isNull(dbCreateUser)){
+            throw new GCloudBusinessException("查询用户信息失败");
+        }
+        ShareUserInfoVo shareUserInfoVo = new ShareUserInfoVo();
+        shareUserInfoVo.setUserId(dbCreateUser.getUserId());
+        shareUserInfoVo.setUsername(encryptUsername(dbCreateUser.getUsername()));
+
+        context.getShareDetailVo().setShareUserInfoVO(shareUserInfoVo);
+    }
+
+
+    /**
+     * 用户名隐私加密
+     *
+     * @param username
+     * @return
+     */
+    private String encryptUsername(String username) {
+        StringBuffer encryptName = new StringBuffer(username)
+                .replace(GCloudConstants.TWO_INT,username.length() - GCloudConstants.TWO_INT,
+                        GCloudConstants.COMMON_ENCRYPT_STR);
+        return encryptName.toString();
     }
 }
 

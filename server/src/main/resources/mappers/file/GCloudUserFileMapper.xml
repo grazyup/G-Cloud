@@ -37,17 +37,17 @@
                folder_flag AS folderFlag,
                file_type AS fileType,
                update_time AS updateTime,
-               filename
+               filename AS filename
         FROM
             g_cloud_user_file
         WHERE
+            user_id = #{queryFileParam.userId}
             <if test="queryFileParam.fileIdList != null">
                 AND file_id IN
                 <foreach collection="queryFileParam.fileIdList" open="(" close=")" item="item" separator=",">
                     #{item}
                 </foreach>
             </if>
-            user_id = #{queryFileParam.userId}
             <if test="queryFileParam.parentId != null and queryFileParam.parentId != -1">
                 AND parent_id = #{queryFileParam.parentId}
             </if>
