@@ -389,7 +389,6 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
 
     /**
      * 递归查询所有的子文件信息
-     *
      * @param records
      * @return
      */
@@ -406,12 +405,43 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
             return result;
         }
         records.stream()
-                .filter(record -> FolderFlagEnum.YES.getCode().equals(record.getFolderFlag()))
                 .forEach(record -> doFindAllChildRecords(result,record));
         return result;
     }
 
 
+    /**
+     * 递归查询所有的子文件信息
+     *
+     * @param fileIdList
+     * @return
+     */
+    @Override
+    public List<GCloudUserFile> findAllFileRecordsByFileIdList(List<Long> fileIdList) {
+        if(CollectionUtils.isEmpty(fileIdList)){
+            return Lists.newArrayList();
+        }
+        List<GCloudUserFile> records = listByIds(fileIdList);
+        if (CollectionUtils.isEmpty(records)) {
+            return Lists.newArrayList();
+        }
+        return findAllFileRecords(records);
+    }
+
+
+    /**
+     * 实体转换
+     *
+     * @param records
+     * @return
+     */
+    @Override
+    public List<UserFileVO> transferVOList(List<GCloudUserFile> records) {
+        if (CollectionUtils.isEmpty(records)) {
+            return Lists.newArrayList();
+        }
+        return records.stream().map(fileConverter::GcloudUserFileToUserFileVO).collect(Collectors.toList());
+    }
 
 
     /********************************************** private方法 **********************************************/

@@ -165,4 +165,22 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
      * @return
      */
     List<GCloudUserFile> findAllFileRecords(List<GCloudUserFile> records);
+
+
+    /**
+     * 递归查询所有的子文件信息
+     *
+     * @param fileIdList
+     * @return
+     */
+    List<GCloudUserFile> findAllFileRecordsByFileIdList(List<Long> fileIdList);
+
+
+    /**
+     * 实体转换
+     *
+     * @param allFileRecords
+     * @return
+     */
+    List<UserFileVO> transferVOList(List<GCloudUserFile> allFileRecords);
 }

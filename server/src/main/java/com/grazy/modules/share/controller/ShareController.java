@@ -8,6 +8,7 @@ import com.grazy.common.utils.UserIdUtil;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.response.R;
 import com.grazy.core.utils.IdUtil;
+import com.grazy.modules.file.vo.UserFileVO;
 import com.grazy.modules.share.context.*;
 import com.grazy.modules.share.converter.ShareConverter;
 import com.grazy.modules.share.po.CancelSharePo;
@@ -149,6 +150,24 @@ public class ShareController {
         ShareSimpleDetailContext context = new ShareSimpleDetailContext();
         context.setShareId(IdUtil.decrypt(shareId));
         ShareSimpleDetailVo result = gCloudShareService.simpleDetail(context);
+        return R.data(result);
+    }
+
+
+    @ApiOperation(
+            value = "获取下一级文件列表",
+            notes = "该接口提供了获取下一级文件列表的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @NeedShareToken
+    @GetMapping("/share/file/list")
+    public R<List<UserFileVO>> fileList(@NotBlank(message = "文件的父文件夹不能为空") @RequestParam(value = "parentId",required = false) String parentId){
+        QueryChildFileListContext context = new QueryChildFileListContext();
+        context.setParentId(IdUtil.decrypt(parentId));
+        context.setShareId(ShareIdUtil.get());
+        List<UserFileVO> result = gCloudShareService.fileList(context);
         return R.data(result);
     }
 }

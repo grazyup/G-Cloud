@@ -1,5 +1,6 @@
 package com.grazy.modules.share.service;
 
+import com.grazy.modules.file.vo.UserFileVO;
 import com.grazy.modules.share.context.*;
 import com.grazy.modules.share.domain.GCloudShare;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -68,4 +69,13 @@ public interface GCloudShareService extends IService<GCloudShare> {
      * @return
      */
     ShareSimpleDetailVo simpleDetail(ShareSimpleDetailContext context);
+
+
+    /**
+     * 获取下一级文件列表
+     *
+     * @param context
+     * @return
+     */
+    List<UserFileVO> fileList(QueryChildFileListContext context);
 }

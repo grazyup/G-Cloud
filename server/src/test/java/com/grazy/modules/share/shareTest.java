@@ -5,6 +5,7 @@ import com.grazy.GCloudServerLauncher;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.modules.file.context.CreateFolderContext;
 import com.grazy.modules.file.service.GCloudUserFileService;
+import com.grazy.modules.file.vo.UserFileVO;
 import com.grazy.modules.share.context.*;
 import com.grazy.modules.share.enums.ShareDayTypeEnum;
 import com.grazy.modules.share.enums.ShareTypeEnum;
@@ -344,5 +345,39 @@ public class shareTest {
         Assert.isTrue(Objects.nonNull(shareSimpleDetailVo));
 
         System.out.println(shareSimpleDetailVo);
+    }
+
+
+    /**
+     * 校验查询分享下一级文件列表成功
+     */
+    @Test
+    public void queryShareFileListSuccess() {
+        Long userId = userService.register(createUserRegisterContext());
+        UserInfoVo info = userService.info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name");
+
+        Long fileId = gCloudUserFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        CreateShareUrlContext createShareUrlContext = new CreateShareUrlContext();
+        createShareUrlContext.setShareName("share-1");
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setUserId(userId);
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(info.getRootFileId()));
+        GCloudShareUrlVo vo = gCloudShareService.create(createShareUrlContext);
+        Assert.isTrue(Objects.nonNull(vo));
+
+        QueryChildFileListContext queryChildFileListContext = new QueryChildFileListContext();
+        queryChildFileListContext.setShareId(vo.getShareId());
+        queryChildFileListContext.setParentId(info.getRootFileId());
+        List<UserFileVO> fileVOList = gCloudShareService.fileList(queryChildFileListContext);
+        System.out.println(fileVOList);
+        Assert.notEmpty(fileVOList);
     }
 }

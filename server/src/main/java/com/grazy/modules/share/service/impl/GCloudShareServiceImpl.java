@@ -3,6 +3,7 @@ package com.grazy.modules.share.service.impl;
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Lists;
 import com.grazy.common.config.GCloudServerConfigProperties;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
@@ -11,6 +12,7 @@ import com.grazy.core.utils.IdUtil;
 import com.grazy.core.utils.JwtUtil;
 import com.grazy.core.utils.UUIDUtil;
 import com.grazy.modules.file.context.QueryFileListContext;
+import com.grazy.modules.file.domain.GCloudUserFile;
 import com.grazy.modules.file.enums.DelFlagEnum;
 import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.UserFileVO;
@@ -36,9 +38,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
 * @author gaofu
@@ -172,6 +173,29 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
         return context.getShareSimpleDetailVo();
     }
 
+
+    /**
+     * 获取下一级文件列表
+     *  1.校验分享链接是否有效
+     *  2.校验所需文件ID是否为链接中的文件
+     *  3.查询对应的子文件集合并返回
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public List<UserFileVO> fileList(QueryChildFileListContext context) {
+        GCloudShare record = checkShareStatus(context.getShareId());
+        context.setRecord(record);
+        List<UserFileVO> allUserFileRecords = checkFileIdIsOnShareStatusAndGetAllShareUserFiles(context.getShareId(), Lists.newArrayList(context.getParentId()));
+        //获取所需父类下的子类文件
+        Map<Long, List<UserFileVO>> parentFileListMap = allUserFileRecords.stream().collect(Collectors.groupingBy(UserFileVO::getParentId));
+        List<UserFileVO> userFileVOS = parentFileListMap.get(context.getParentId());
+        if (CollectionUtils.isEmpty(userFileVOS)){
+            return Lists.newArrayList();
+        }
+        return userFileVOS;
+    }
 
 
 
@@ -478,6 +502,36 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
         ShareSimpleDetailVo shareSimpleDetailVo = context.getShareSimpleDetailVo();
         shareSimpleDetailVo.setShareId(record.getShareId());
         shareSimpleDetailVo.setShareName(record.getShareName());
+    }
+
+
+    /**
+     * 检验所需的文件是否属于分享链接里面的，并查询返回全部链接的文件
+     *
+     * @param shareId
+     * @param newArrayList
+     * @return
+     */
+    private List<UserFileVO> checkFileIdIsOnShareStatusAndGetAllShareUserFiles(Long shareId, ArrayList<Long> newArrayList) {
+        List<Long> fileIdList = getShareFileIdList(shareId);  //仅一级文件id
+        if(CollectionUtils.isEmpty(fileIdList)){
+            return Lists.newArrayList();
+        }
+        //返回连接中的全部文件
+        List<GCloudUserFile> allFileRecords = gCloudUserFileService.findAllFileRecordsByFileIdList(fileIdList);
+        if(CollectionUtils.isEmpty(allFileRecords)){
+            return Lists.newArrayList();
+        }
+        List<Long> allFileIdList = allFileRecords
+                .stream()
+                .filter(Objects::nonNull)
+                .filter(record -> Objects.equals(record.getDelFlag(), DelFlagEnum.NO.getCode()))
+                .map(GCloudUserFile::getFileId)
+                .collect(Collectors.toList());
+        if(allFileIdList.containsAll(newArrayList)){
+            return gCloudUserFileService.transferVOList(allFileRecords);
+        }
+        throw new GCloudBusinessException(ResponseCode.SHARE_FILE_MISS);
     }
 }
 
