@@ -13,6 +13,7 @@ import com.grazy.modules.share.converter.ShareConverter;
 import com.grazy.modules.share.po.CancelSharePo;
 import com.grazy.modules.share.po.CheckShareCodePo;
 import com.grazy.modules.share.po.CreateShareUrlPo;
+import com.grazy.modules.share.po.ShareSimpleDetailVo;
 import com.grazy.modules.share.service.GCloudShareService;
 import com.grazy.modules.share.vo.GCloudShareUrlListVo;
 import com.grazy.modules.share.vo.GCloudShareUrlVo;
@@ -24,6 +25,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -131,6 +133,22 @@ public class ShareController {
         QueryShareDetailContext context = new QueryShareDetailContext();
         context.setShareId(ShareIdUtil.get());
         ShareDetailVo result = gCloudShareService.detail(context);
+        return R.data(result);
+    }
+
+
+    @ApiOperation(
+            value = "查询分享的简单详情",
+            notes = "该接口提供了查询分享的简单详情的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @GetMapping("/share/simple")
+    public R<ShareSimpleDetailVo> simpleDetail(@NotBlank(message = "分享链接ID不能为空") @RequestParam(value = "shareId",required = false) String shareId){
+        ShareSimpleDetailContext context = new ShareSimpleDetailContext();
+        context.setShareId(IdUtil.decrypt(shareId));
+        ShareSimpleDetailVo result = gCloudShareService.simpleDetail(context);
         return R.data(result);
     }
 }

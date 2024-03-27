@@ -21,6 +21,7 @@ import com.grazy.modules.share.domain.GCloudShareFile;
 import com.grazy.modules.share.enums.ShareDayTypeEnum;
 import com.grazy.modules.share.enums.ShareStatusEnum;
 import com.grazy.modules.share.mapper.GCloudShareMapper;
+import com.grazy.modules.share.po.ShareSimpleDetailVo;
 import com.grazy.modules.share.service.GCloudShareFileService;
 import com.grazy.modules.share.service.GCloudShareService;
 import com.grazy.modules.share.vo.GCloudShareUrlListVo;
@@ -148,6 +149,27 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
         assembleShareFileInfo(context);
         assembleShareUserInfo(context);
         return context.getShareDetailVo();
+    }
+
+
+    /**
+     * 查询分享的简单详情
+     * 1.校验分享是否有效
+     * 2.封装分享信息
+     * 3.封装分享用户的信息
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public ShareSimpleDetailVo simpleDetail(ShareSimpleDetailContext context) {
+        GCloudShare record = checkShareStatus(context.getShareId());
+        context.setRecord(record);
+        ShareSimpleDetailVo shareSimpleDetailVo = new ShareSimpleDetailVo();
+        context.setShareSimpleDetailVo(shareSimpleDetailVo);
+        assembleShareSimpleInfo(context);
+        assembleUserSimpleInfo(context);
+        return context.getShareSimpleDetailVo();
     }
 
 
@@ -424,6 +446,38 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
                 .replace(GCloudConstants.TWO_INT,username.length() - GCloudConstants.TWO_INT,
                         GCloudConstants.COMMON_ENCRYPT_STR);
         return encryptName.toString();
+    }
+
+
+    /**
+     * 封装简单分享用户的信息
+     *
+     * @param context
+     */
+    private void assembleUserSimpleInfo(ShareSimpleDetailContext context) {
+        GCloudShare record = context.getRecord();
+        Long createUserId = record.getCreateUser();
+        GCloudUser dbUser = gCloudUserService.getById(createUserId);
+        if(Objects.isNull(dbUser)){
+            throw new GCloudBusinessException("分享的用户不存在");
+        }
+        ShareUserInfoVo shareUserInfoVo = new ShareUserInfoVo();
+        shareUserInfoVo.setUserId(dbUser.getUserId());
+        shareUserInfoVo.setUsername(dbUser.getUsername());
+        context.getShareSimpleDetailVo().setShareUserInfoVO(shareUserInfoVo);
+    }
+
+
+    /**
+     * 封装简单分享信息
+     *
+     * @param context
+     */
+    private void assembleShareSimpleInfo(ShareSimpleDetailContext context) {
+        GCloudShare record = context.getRecord();
+        ShareSimpleDetailVo shareSimpleDetailVo = context.getShareSimpleDetailVo();
+        shareSimpleDetailVo.setShareId(record.getShareId());
+        shareSimpleDetailVo.setShareName(record.getShareName());
     }
 }
 
