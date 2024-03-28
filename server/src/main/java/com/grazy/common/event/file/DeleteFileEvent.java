@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * @Author: grazy
  * @Date: 2024-02-29 10:24
- * @Description: 文件删除事件
+ * @Description: 文件删除事件(放入回收站)
  */
 
 @Setter

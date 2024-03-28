@@ -94,4 +94,12 @@ public interface GCloudShareService extends IService<GCloudShare> {
      * @param context
      */
     void download(ShareFileDownloadContext context);
+
+
+    /**
+     * 刷新分享链接状态
+     *
+     * @param allAvailableFileIdList
+     */
+    void refreshShareStatus(List<Long> allAvailableFileIdList);
 }

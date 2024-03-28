@@ -4,13 +4,16 @@ import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.grazy.common.config.GCloudServerConfigProperties;
+import com.grazy.common.event.log.ErrorLogEvent;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.response.ResponseCode;
 import com.grazy.core.utils.IdUtil;
 import com.grazy.core.utils.JwtUtil;
 import com.grazy.core.utils.UUIDUtil;
+import com.grazy.modules.file.constants.FileConstants;
 import com.grazy.modules.file.context.CopyFileContext;
 import com.grazy.modules.file.context.FileDownloadContext;
 import com.grazy.modules.file.context.QueryFileListContext;
@@ -35,9 +38,11 @@ import com.grazy.modules.share.vo.ShareUserInfoVo;
 import com.grazy.modules.user.domain.GCloudUser;
 import com.grazy.modules.user.service.GCloudUserService;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
+import org.apache.commons.collections.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -49,7 +54,7 @@ import java.util.stream.Collectors;
 * @createDate 2024-01-24 17:43:16
 */
 @Service
-public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GCloudShare> implements GCloudShareService{
+public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GCloudShare> implements GCloudShareService, ApplicationContextAware {
 
     @Resource
     private GCloudServerConfigProperties configProperties;
@@ -66,6 +71,12 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
     @Resource
     private GCloudUserService gCloudUserService;
 
+    private ApplicationContext applicationContext;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
     /**
      * 创建分享链接
@@ -230,6 +241,26 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
         checkShareStatus(context.getShareId());
         checkFileIdIsOnShareStatus(context.getShareId(),Lists.newArrayList(context.getFileId()));
         doDownload(context);
+    }
+
+
+    /**
+     * 刷新分享链接状态
+     *  1.查询所有文件对应的分享链接id集合
+     *  2.去判断每一个分享对应的文件以及其所有的父文件信息均为正常，此情况把分享状态修改为正常
+     *  3.如果有分享的文件或者其父文件被删除，变更该分享的状态为有文件被删除
+     *
+     * @param allAvailableFileIdList
+     */
+    @Override
+    public void refreshShareStatus(List<Long> allAvailableFileIdList) {
+        List<Long> shareIdList = getShareIdListByFileIdList(allAvailableFileIdList);
+        if(CollectionUtils.isEmpty(shareIdList)){
+            return;
+        }
+        //一个链接可能对应多个文件
+        HashSet<Long> shareIdSet = Sets.newHashSet(shareIdList);
+        shareIdSet.stream().forEach(this::refreshOneShareStatus);
     }
 
 
@@ -608,6 +639,97 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
      */
     private void checkFileIdIsOnShareStatus(Long shareId, List<Long> fileIdList) {
         checkFileIdIsOnShareStatusAndGetAllShareUserFiles(shareId,fileIdList);
+    }
+
+
+    /**
+     * 刷新一个分享链接状态
+     *  1.判断分享是否存在
+     *  2.去判断每一个分享对应的文件以及其所有的父文件信息均为正常，此情况把分享状态修改为正常
+     *  3.如果有分享的文件或者其父文件被删除，变更该分享的状态为有文件被删除
+     *
+     * @param shareId
+     */
+    private void refreshOneShareStatus(Long shareId) {
+        GCloudShare record = getById(shareId);
+        if(Objects.isNull(record)){
+            return;
+        }
+        ShareStatusEnum shareStatus = ShareStatusEnum.NORMAL;
+        if(!checkShareFileAvailable(shareId)){
+            shareStatus = ShareStatusEnum.FILE_DELETED;
+        }
+        if(Objects.equals(record.getShareStatus(),shareStatus.getCode())){
+            return;
+        }
+        doChangeShareStatus(record,shareStatus);
+    }
+
+
+    /**
+     * 修改分享链接状态
+     *
+     * @param record
+     * @param shareStatus
+     */
+    private void doChangeShareStatus(GCloudShare record, ShareStatusEnum shareStatus) {
+        record.setShareStatus(shareStatus.getCode());
+        if(!updateById(record)){
+            applicationContext.publishEvent(new ErrorLogEvent(this,"更新分享状态失败，请手动更改状态，分享ID为：" + record.getShareId() + ", 分享" +
+                    "状态改为：" + shareStatus.getCode(), GCloudConstants.ZERO_LONG));
+        }
+    }
+
+
+    /**
+     * 检查该分享所有的文件以及所有的父文件均为正常状态
+     *
+     * @param shareId
+     * @return
+     */
+    private boolean checkShareFileAvailable(Long shareId) {
+        List<Long> shareFileIdList = getShareFileIdList(shareId);
+        for(Long fileId: shareFileIdList){
+            if(!checkUpFileAvailable(fileId)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    /**
+     * 检查该文件以及所有的文件夹信息均为正常状态
+     *
+     * @param fileId
+     * @return
+     */
+    private boolean checkUpFileAvailable(Long fileId) {
+        GCloudUserFile record = gCloudUserFileService.getById(fileId);
+        if(Objects.isNull(record)){
+            return false;
+        }
+        if(Objects.equals(record.getDelFlag(),DelFlagEnum.YES.getCode())){
+            return false;
+        }
+        if(Objects.equals(record.getParentId(), FileConstants.TOP_PARENT_ID)){
+            return true;
+        }
+        return checkShareFileAvailable(record.getParentId());
+    }
+
+
+    /**
+     * 通过文件ID查询对应的分享ID集合
+     *
+     * @param allAvailableFileIdList
+     * @return
+     */
+    private List<Long> getShareIdListByFileIdList(List<Long> allAvailableFileIdList) {
+        LambdaQueryWrapper<GCloudShareFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.select(GCloudShareFile::getShareId);
+        lambdaQueryWrapper.in(GCloudShareFile::getFileId,allAvailableFileIdList);
+        return gCloudShareFileService.listObjs(lambdaQueryWrapper, value -> (Long)value);
     }
 }
 
