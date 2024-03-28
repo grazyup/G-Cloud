@@ -78,4 +78,11 @@ public interface GCloudShareService extends IService<GCloudShare> {
      * @return
      */
     List<UserFileVO> fileList(QueryChildFileListContext context);
+
+    /**
+     * 转存到我的网盘
+     *
+     * @param context
+     */
+    void saveFiles(ShareSaveContext context);
 }

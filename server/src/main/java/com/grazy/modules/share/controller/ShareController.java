@@ -11,10 +11,7 @@ import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.file.vo.UserFileVO;
 import com.grazy.modules.share.context.*;
 import com.grazy.modules.share.converter.ShareConverter;
-import com.grazy.modules.share.po.CancelSharePo;
-import com.grazy.modules.share.po.CheckShareCodePo;
-import com.grazy.modules.share.po.CreateShareUrlPo;
-import com.grazy.modules.share.po.ShareSimpleDetailVo;
+import com.grazy.modules.share.po.*;
 import com.grazy.modules.share.service.GCloudShareService;
 import com.grazy.modules.share.vo.GCloudShareUrlListVo;
 import com.grazy.modules.share.vo.GCloudShareUrlVo;
@@ -169,5 +166,29 @@ public class ShareController {
         context.setShareId(ShareIdUtil.get());
         List<UserFileVO> result = gCloudShareService.fileList(context);
         return R.data(result);
+    }
+
+
+    @ApiOperation(
+            value = "转存到我的网盘",
+            notes = "该接口提供了转存到我的网盘的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("share/save")
+    public R<String> saveFiles(@Validated @RequestBody ShareSavePo shareSavePo){
+        ShareSaveContext context = new ShareSaveContext();
+        context.setShareId(ShareIdUtil.get());
+        context.setUserId(UserIdUtil.get());
+        context.setTargetParentId(IdUtil.decrypt(shareSavePo.getTargetParentId()));
+        String fileIds = shareSavePo.getFileIds();
+        List<Long> fileIdList = Splitter.on(GCloudConstants.COMMON_SEPARATOR)
+                .splitToList(fileIds)
+                .stream()
+                .map(IdUtil::decrypt)
+                .collect(Collectors.toList());
+        context.setFileIdList(fileIdList);
+        gCloudShareService.saveFiles(context);
+        return R.success();
     }
 }
