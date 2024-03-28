@@ -12,6 +12,7 @@ import com.grazy.core.utils.IdUtil;
 import com.grazy.core.utils.JwtUtil;
 import com.grazy.core.utils.UUIDUtil;
 import com.grazy.modules.file.context.CopyFileContext;
+import com.grazy.modules.file.context.FileDownloadContext;
 import com.grazy.modules.file.context.QueryFileListContext;
 import com.grazy.modules.file.domain.GCloudUserFile;
 import com.grazy.modules.file.enums.DelFlagEnum;
@@ -217,28 +218,20 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
 
 
     /**
-     * 委托文件模块实现文件的转存
+     * 分享文件下载
+     * 1.校验分享链接状态
+     * 2.校验要下载的文件是否存在于链接中
+     * 3.委托文件模块实现文件下载
      *
      * @param context
      */
-    private void doSaveFileAsMe(ShareSaveContext context) {
-        CopyFileContext copyFileContext = new CopyFileContext();
-        copyFileContext.setFileIdList(context.getFileIdList());
-        copyFileContext.setUserId(context.getUserId());
-        copyFileContext.setTargetParentId(context.getTargetParentId());
-        gCloudUserFileService.copy(copyFileContext);
+    @Override
+    public void download(ShareFileDownloadContext context) {
+        checkShareStatus(context.getShareId());
+        checkFileIdIsOnShareStatus(context.getShareId(),Lists.newArrayList(context.getFileId()));
+        doDownload(context);
     }
 
-
-    /**
-     * 校验转存文件是否存在于分享链接中
-     *
-     * @param shareId
-     * @param fileIdList
-     */
-    private void checkFileIdIsOnShareStatus(Long shareId, List<Long> fileIdList) {
-        checkFileIdIsOnShareStatusAndGetAllShareUserFiles(shareId,fileIdList);
-    }
 
 
     /********************************************** private方法 **********************************************/
@@ -576,6 +569,45 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
             return gCloudUserFileService.transferVOList(allFileRecords);
         }
         throw new GCloudBusinessException(ResponseCode.SHARE_FILE_MISS);
+    }
+
+
+    /**
+     * 委托文件模块实现文件下载
+     *
+     * @param context
+     */
+    private void doDownload(ShareFileDownloadContext context) {
+        FileDownloadContext fileDownloadContext = new FileDownloadContext();
+        fileDownloadContext.setFileId(context.getFileId());
+        fileDownloadContext.setResponse(context.getResponse());
+        fileDownloadContext.setUserId(context.getUserId());
+        gCloudUserFileService.downloadWithoutCheckUser(fileDownloadContext);
+    }
+
+
+    /**
+     * 委托文件模块实现文件的转存
+     *
+     * @param context
+     */
+    private void doSaveFileAsMe(ShareSaveContext context) {
+        CopyFileContext copyFileContext = new CopyFileContext();
+        copyFileContext.setFileIdList(context.getFileIdList());
+        copyFileContext.setUserId(context.getUserId());
+        copyFileContext.setTargetParentId(context.getTargetParentId());
+        gCloudUserFileService.copy(copyFileContext);
+    }
+
+
+    /**
+     * 校验转存文件是否存在于分享链接中
+     *
+     * @param shareId
+     * @param fileIdList
+     */
+    private void checkFileIdIsOnShareStatus(Long shareId, List<Long> fileIdList) {
+        checkFileIdIsOnShareStatusAndGetAllShareUserFiles(shareId,fileIdList);
     }
 }
 

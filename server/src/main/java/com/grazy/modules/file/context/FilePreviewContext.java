@@ -20,7 +20,7 @@ public class FilePreviewContext implements Serializable {
     /**
      * 文件ID
      */
-    private String fileId;
+    private Long fileId;
 
     /**
      * 请求响应对象

@@ -270,6 +270,25 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         doDownload(context.getResponse(),record);
     }
 
+
+    /**
+     * 文件下载（不需要校验文件所属用户与当前登录用户一致）
+     *
+     * @param context
+     */
+    @Override
+    public void downloadWithoutCheckUser(FileDownloadContext context) {
+        GCloudUserFile record = getById(context.getFileId());
+        if(Objects.isNull(record)){
+            throw new GCloudBusinessException("文件资源不存在");
+        }
+        if(!FolderFlagEnum.YES.getCode().equals(record.getFolderFlag())){
+            throw new GCloudBusinessException("文件夹暂不支持下载");
+        }
+        doDownload(context.getResponse(),record);
+    }
+
+
     /**
      * 文件预览
      * 1.校验预览的文件资源是否存在

@@ -108,6 +108,14 @@ public interface GCloudUserFileService extends IService<GCloudUserFile> {
 
 
     /**
+     * 文件下载（不需要校验文件所属用户与当前登录用户一致）、
+     *
+     * @param fileDownloadContext
+     */
+    void downloadWithoutCheckUser(FileDownloadContext fileDownloadContext);
+
+
+    /**
      * 文件预览
      *
      * @param filePreviewContext 文件预览上下文参数对象

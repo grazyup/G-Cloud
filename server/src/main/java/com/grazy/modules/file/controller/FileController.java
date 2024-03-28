@@ -208,7 +208,7 @@ public class FileController {
     public void download(@NotBlank(message = "文件ID不能为空")@RequestParam(value = "fileId",required = false) String fileId,
                          HttpServletResponse response){
         FileDownloadContext fileDownloadContext = new FileDownloadContext();
-        fileDownloadContext.setFileId(fileId);
+        fileDownloadContext.setFileId(IdUtil.decrypt(fileId));
         fileDownloadContext.setResponse(response);
         fileDownloadContext.setUserId(UserIdUtil.get());
         userFileService.download(fileDownloadContext);
@@ -225,7 +225,7 @@ public class FileController {
     public void preview(@NotBlank(message = "文件ID不能为空")@RequestParam(value = "fileId",required = false) String fileId,
                          HttpServletResponse response){
         FilePreviewContext filePreviewContext = new FilePreviewContext();
-        filePreviewContext.setFileId(fileId);
+        filePreviewContext.setFileId(IdUtil.decrypt(fileId));
         filePreviewContext.setResponse(response);
         filePreviewContext.setUserId(UserIdUtil.get());
         userFileService.preview(filePreviewContext);
