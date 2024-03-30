@@ -15,6 +15,7 @@ import com.grazy.storage.engine.core.context.DeleteStorageFileContext;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -59,6 +60,7 @@ public class FilePhysicalDeleteEventListener implements ApplicationContextAware 
      *
      * @param event
      */
+    @Async(value = "eventListenerTaskExecutor")
     @EventListener(classes = FilePhysicalDeleteEvent.class)
     public void physicalDeleteFile(FilePhysicalDeleteEvent event){
         List<GCloudUserFile> allRecords = event.getAllRecords();

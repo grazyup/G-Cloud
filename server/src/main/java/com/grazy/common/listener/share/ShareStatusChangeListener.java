@@ -8,6 +8,7 @@ import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.share.service.GCloudShareService;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -38,6 +39,7 @@ public class ShareStatusChangeListener {
      *
      * @param event
      */
+    @Async(value = "eventListenerTaskExecutor")
     @EventListener(DeleteFileEvent.class)
     public void changeShareStatusToFileDelete(DeleteFileEvent event){
         List<Long> fileIdList = event.getFileIdList();
@@ -61,6 +63,7 @@ public class ShareStatusChangeListener {
      *
      * @param event
      */
+    @Async(value = "eventListenerTaskExecutor")
     @EventListener(FileRestoreEvent.class)
     public void changeShareStatusToFileNormal(FileRestoreEvent event){
         List<Long> fileIdList = event.getFileIdList();

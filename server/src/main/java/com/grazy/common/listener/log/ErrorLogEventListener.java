@@ -5,6 +5,7 @@ import com.grazy.core.utils.IdUtil;
 import com.grazy.modules.log.domain.GCloudErrorLog;
 import com.grazy.modules.log.service.GCloudErrorLogService;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -26,6 +27,7 @@ public class ErrorLogEventListener {
      * 保存错误日志到数据库
      * @param event
      */
+    @Async(value = "eventListenerTaskExecutor")
     @EventListener(ErrorLogEvent.class)
     public void saveErrorLogRecord(ErrorLogEvent event){
         GCloudErrorLog gCloudErrorLog = new GCloudErrorLog();

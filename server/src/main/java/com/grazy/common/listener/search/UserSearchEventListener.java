@@ -7,6 +7,7 @@ import com.grazy.modules.user.domain.GCloudUserSearchHistory;
 import com.grazy.modules.user.service.GCloudUserSearchHistoryService;
 import org.springframework.context.event.EventListener;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -27,6 +28,7 @@ public class UserSearchEventListener {
     /**
      * 监听用户搜索事件，将其保存到用户的搜索历史记录当中
      */
+    @Async(value = "eventListenerTaskExecutor")
     @EventListener(SearchEvent.class)
     public void saveSearchHistory(SearchEvent event){
         GCloudUserSearchHistory gCloudUserSearchHistory = new GCloudUserSearchHistory();
