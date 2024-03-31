@@ -68,6 +68,7 @@ public class FilePhysicalDeleteEventListener implements ApplicationContextAware 
             return;
         }
         List<Long> realFileIdList = findAllUnusedRealFileIdList(allRecords);
+        //需要判断空的原因是：该方法为异步调用，可能异步线程执行该监听方法的时候，主线程还没有提交事务，查询的结果可能为空
         if(CollectionUtils.isEmpty(realFileIdList)){
             return;
         }

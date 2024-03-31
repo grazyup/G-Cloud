@@ -68,13 +68,13 @@ public class ShareTokenAspect {
      * @throws Throwable
      */
     @Around("ShareAuthPointcut()")
-    public Object LoginAuthAround(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+    public Object ShareAuthAround(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
             //校验登录信息
             ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             HttpServletRequest request = servletRequestAttributes.getRequest();
             String requestURI = request.getRequestURI();
             log.info("成功拦截到请求，URI为{}",requestURI);
-            if(!checkAndSaveUserId(request)){
+            if(!checkAndSaveShareId(request)){
                 log.warn("成功拦截到请求，URI为{},检测到用户的分享提取码失效，将跳转至分享提取码校验页面",requestURI);
                 return R.fail(ResponseCode.ACCESS_DENIED);
             }
@@ -88,7 +88,7 @@ public class ShareTokenAspect {
      * @param request 请求
      * @return true:校验通过; false:校验不通过
      */
-    private boolean checkAndSaveUserId(HttpServletRequest request) {
+    private boolean checkAndSaveShareId(HttpServletRequest request) {
         //从请求头中获取token
         String shareToken = request.getHeader(SHARE_CODE_AUTH_REQUEST_HEADER_NAME);
         if(StringUtils.isBlank(shareToken)){
@@ -107,5 +107,4 @@ public class ShareTokenAspect {
         log.info("token校验成功！");
         return true;
     }
-
 }
