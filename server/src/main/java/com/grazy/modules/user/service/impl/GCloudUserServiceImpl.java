@@ -2,6 +2,7 @@ package com.grazy.modules.user.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.grazy.common.cache.AnnotationCacheService;
 import com.grazy.constants.CacheConstants;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.response.ResponseCode;
@@ -20,13 +21,17 @@ import com.grazy.modules.user.mapper.GCloudUserMapper;
 import com.grazy.modules.user.service.GCloudUserService;
 import com.grazy.modules.user.vo.UserInfoVo;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -50,6 +55,9 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
     @Resource
     private GCloudUserMapper userMapper;
 
+    @Resource
+    @Qualifier(value = "userAnnotationCacheService")   //因为使用接口形式注入，可能容器中存在多个该接口的实现类，需要我们手动指定
+    private AnnotationCacheService<GCloudUser> cacheService;
 
     /**
      * 用户注册业务实现
@@ -194,6 +202,42 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
     }
 
 
+    /********************************************** 重写mybatis-plus方法 **********************************************/
+
+    /**
+      重写的原因是，业务之前使用到Mybatis-Plus中封装的数据操作方法，避免更改麻烦，直接重新其中的方法，替换成带有缓存业务的代码逻辑实现方法
+     */
+
+    @Override
+    public boolean removeById(Serializable id) {
+        return cacheService.removeById(id);
+    }
+
+    @Override
+    public boolean removeByIds(Collection<? extends Serializable> idList) {
+        //该业务层使用的是注解形式的缓存实现的方式，为此不支持批量操作  --> (使用什么类型按自己业务需求注入即可)
+        throw new GCloudBusinessException("请更换手动缓存");
+    }
+
+    @Override
+    public boolean updateById(GCloudUser entity) {
+        return cacheService.updateById(entity.getUserId(),entity);
+    }
+
+    @Override
+    public boolean updateBatchById(Collection<GCloudUser> entityList) {
+        throw new GCloudBusinessException("请更换手动缓存");
+    }
+
+    @Override
+    public GCloudUser getById(Serializable id) {
+        return cacheService.getById(id);
+    }
+
+    @Override
+    public List<GCloudUser> listByIds(Collection<? extends Serializable> idList) {
+        throw new GCloudBusinessException("请更换手动缓存");
+    }
 
 
     /********************************************** private方法 **********************************************/

@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 /**
  * @Author: grazy
  * @Date: 2024-04-01 22:36
- * @Description:
+ * @Description: 手动处理缓存的公用顶级父类
  */
 
 public abstract class AbstractManualCacheService<V> implements ManualCacheService<V>{

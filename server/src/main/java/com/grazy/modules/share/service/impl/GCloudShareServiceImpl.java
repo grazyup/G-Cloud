@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.grazy.common.cache.ManualCacheService;
 import com.grazy.common.config.GCloudServerConfigProperties;
 import com.grazy.common.event.log.ErrorLogEvent;
 import com.grazy.core.constants.GCloudConstants;
@@ -38,6 +39,7 @@ import com.grazy.modules.share.vo.ShareUserInfoVo;
 import com.grazy.modules.user.domain.GCloudUser;
 import com.grazy.modules.user.service.GCloudUserService;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
@@ -45,6 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.collections.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -70,6 +73,10 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
 
     @Resource
     private GCloudUserService gCloudUserService;
+
+    @Resource
+    @Qualifier(value = "shareManualCacheService")
+    private ManualCacheService<GCloudShare> cacheService;
 
     private ApplicationContext applicationContext;
 
@@ -263,6 +270,48 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
         shareIdSet.stream().forEach(this::refreshOneShareStatus);
     }
 
+
+
+    /********************************************** 重写mybatis-plus方法 **********************************************/
+
+    /**
+     重写的原因是，业务之前使用到Mybatis-Plus中封装的数据操作方法，避免更改麻烦，直接重新其中的方法，替换成带有缓存业务的代码逻辑实现方法
+     */
+
+    @Override
+    public boolean removeById(Serializable id) {
+        return cacheService.removeById(id);
+    }
+
+    @Override
+    public boolean removeByIds(Collection<? extends Serializable> idList) {
+        return cacheService.removeByIds(idList);
+    }
+
+    @Override
+    public boolean updateById(GCloudShare entity) {
+        return cacheService.updateById(entity.getShareId(),entity);
+    }
+
+    @Override
+    public boolean updateBatchById(Collection<GCloudShare> entityList) {
+        if(CollectionUtils.isEmpty(entityList)){
+            return true;
+        }
+        Map<Long, GCloudShare> entityMap = entityList.stream()
+                .collect(Collectors.toMap(GCloudShare::getShareId, item -> item));
+        return cacheService.updateByIds(entityMap);
+    }
+
+    @Override
+    public GCloudShare getById(Serializable id) {
+        return cacheService.getById(id);
+    }
+
+    @Override
+    public List<GCloudShare> listByIds(Collection<? extends Serializable> idList) {
+        return cacheService.getByIds(idList);
+    }
 
 
     /********************************************** private方法 **********************************************/
@@ -676,7 +725,7 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
         record.setShareStatus(shareStatus.getCode());
         if(!updateById(record)){
             applicationContext.publishEvent(new ErrorLogEvent(this,"更新分享状态失败，请手动更改状态，分享ID为：" + record.getShareId() + ", 分享" +
-                    "状态改为：" + shareStatus.getCode(), GCloudConstants.ZERO_LONG));
+                    "状态改为：" +  shareStatus.getCode(), GCloudConstants.ZERO_LONG));
         }
     }
 
