@@ -17,9 +17,6 @@ import org.springframework.stereotype.Component;
 @Data
 public class GCloudServerConfigProperties {
 
-    @Value("${server.port}")
-    private String serverPort;
-
     /**
      * 文件分片的过期天数
      */
@@ -29,6 +26,6 @@ public class GCloudServerConfigProperties {
     /**
      * 文件分享链接URL前缀
      */
-    private String sharePrefix = "http://127.0.0.1:" + serverPort + "share/";
+    private String sharePrefix = "http://127.0.0.1:8080" + "share/";
 
 }

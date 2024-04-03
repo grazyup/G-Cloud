@@ -38,16 +38,17 @@ import com.grazy.modules.share.vo.ShareDetailVo;
 import com.grazy.modules.share.vo.ShareUserInfoVo;
 import com.grazy.modules.user.domain.GCloudUser;
 import com.grazy.modules.user.service.GCloudUserService;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.apache.commons.collections.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.io.Serializable;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -403,7 +404,7 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
         if(sharePrefix.lastIndexOf(GCloudConstants.SLASH_STR) == GCloudConstants.MINUS_ONE_INT){
             sharePrefix = sharePrefix + GCloudConstants.SLASH_STR;
         }
-        return sharePrefix + shareId;
+        return sharePrefix + URLEncoder.encode(IdUtil.encrypt(shareId));
     }
 
 
