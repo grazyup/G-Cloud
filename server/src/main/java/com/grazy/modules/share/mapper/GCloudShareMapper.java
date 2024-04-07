@@ -23,6 +23,16 @@ public interface GCloudShareMapper extends BaseMapper<GCloudShare> {
      * @return
      */
     List<GCloudShareUrlListVo> selectShareVOListByUserId(@Param("userId") Long userId);
+
+
+    /**
+     * 滚动查询分享ID
+     *
+     * @param startId
+     * @param limit
+     * @return
+     */
+    List<Long> rollingQueryShareId(@Param("startId") long startId, @Param("limit") long limit);
 }
 
 

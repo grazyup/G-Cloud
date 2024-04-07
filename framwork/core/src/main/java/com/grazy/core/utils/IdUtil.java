@@ -237,4 +237,7 @@ public class IdUtil {
         return result;
     }
 
+    public static void main(String[] args) {
+        System.out.println(encrypt(get()));
+    }
 }

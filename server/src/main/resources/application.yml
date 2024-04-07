@@ -63,17 +63,26 @@ com:
 
     storage:
       engine:
+
+    bloom:
+      filter:
+        local:
+          items:
+            - name: SHARE_SIMPLE_DETAIL
+              funnel-type-name: LONG
+              expected-insertions: 10000000
+              fpp: 0.01
+
 #        fdfs:
 #          connect-timeout: 600
 #          tracker-list:
 #            - 192.168.195.100:22122
 #          group: group1
 
-        oss:
-          access-key-id:
-          access-key-secret:
-          bucket-name:
-          endpoint:
-          auto-create-bucket: true
-
+#        oss:
+#          access-key-id:
+#          access-key-secret:
+#          bucket-name:
+#          endpoint:
+#          auto-create-bucket: true
 

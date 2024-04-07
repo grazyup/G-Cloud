@@ -26,7 +26,7 @@ import javax.annotation.Resource;
 public class LocalBloomFilterTest {
 
     @Resource
-    private BloomFilterManager<Integer> manager;
+    private BloomFilterManager manager;
 
 
     /**

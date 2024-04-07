@@ -59,11 +59,11 @@
         </dependency>
 
         <!--本地文件存储-->
-<!--        <dependency>-->
-<!--            <groupId>com.grazy</groupId>-->
-<!--            <artifactId>G-Cloud-storage-engine-local</artifactId>-->
-<!--            <version>1.0</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>com.grazy</groupId>
+            <artifactId>G-Cloud-storage-engine-local</artifactId>
+            <version>1.0</version>
+        </dependency>
 
         <!--FastDFS文件存储-->
 <!--        <dependency>-->
@@ -72,10 +72,17 @@
 <!--            <version>1.0</version>-->
 <!--        </dependency>-->
 
-        <!--阿里云OSS文件存储-->
+<!--        &lt;!&ndash;阿里云OSS文件存储&ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>com.grazy</groupId>-->
+<!--            <artifactId>G-Cloud-storage-engine-oss</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
+
+        <!--布隆过滤器-->
         <dependency>
             <groupId>com.grazy</groupId>
-            <artifactId>G-Cloud-storage-engine-oss</artifactId>
+            <artifactId>G-Cloud-bloom-filter-loacl</artifactId>
             <version>1.0</version>
         </dependency>
     </dependencies>
