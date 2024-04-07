@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.grazy.bloom.filter.core.BloomFilter;
+import com.grazy.bloom.filter.core.BloomFilterManager;
 import com.grazy.common.cache.ManualCacheService;
 import com.grazy.common.config.GCloudServerConfigProperties;
 import com.grazy.common.event.log.ErrorLogEvent;
@@ -38,6 +40,7 @@ import com.grazy.modules.share.vo.ShareDetailVo;
 import com.grazy.modules.share.vo.ShareUserInfoVo;
 import com.grazy.modules.user.domain.GCloudUser;
 import com.grazy.modules.user.service.GCloudUserService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -58,6 +61,7 @@ import java.util.stream.Collectors;
 * @createDate 2024-01-24 17:43:16
 */
 @Service
+@Slf4j
 public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GCloudShare> implements GCloudShareService, ApplicationContextAware {
 
     @Resource
@@ -74,6 +78,11 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
 
     @Resource
     private GCloudUserService gCloudUserService;
+
+    @Resource
+    private BloomFilterManager manager;
+
+    private static final String BLOOM_FILTER_NAME = "SHARE_SIMPLE_DETAIL";
 
     @Resource
     @Qualifier(value = "shareManualCacheService")
@@ -100,7 +109,9 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
     public GCloudShareUrlVo create(CreateShareUrlContext context) {
         saveShare(context);
         saveShareFiles(context);
-        return assembleShareVO(context);
+        GCloudShareUrlVo gCloudShareUrlVo = assembleShareVO(context);
+        afterCreate(gCloudShareUrlVo, context);
+        return gCloudShareUrlVo;
     }
 
 
@@ -269,6 +280,19 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
         //一个链接可能对应多个文件
         HashSet<Long> shareIdSet = Sets.newHashSet(shareIdList);
         shareIdSet.stream().forEach(this::refreshOneShareStatus);
+    }
+
+
+    /**
+     * 滚动查询分享ID
+     *
+     * @param startId
+     * @param limit
+     * @return
+     */
+    @Override
+    public List<Long> rollingQueryShareId(long startId, long limit) {
+        return gCloudShareMapper.rollingQueryShareId(startId,limit);
     }
 
 
@@ -780,6 +804,22 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
         lambdaQueryWrapper.select(GCloudShareFile::getShareId);
         lambdaQueryWrapper.in(GCloudShareFile::getFileId,allAvailableFileIdList);
         return gCloudShareFileService.listObjs(lambdaQueryWrapper, value -> (Long)value);
+    }
+
+
+    /**
+     * 创建分享链接后置处理
+     *  将新创建的分享ID加载到布隆过滤器中
+     *
+     * @param gCloudShareUrlVo
+     * @param context
+     */
+    private void afterCreate(GCloudShareUrlVo gCloudShareUrlVo, CreateShareUrlContext context) {
+        BloomFilter<Long> filter = manager.getFilter(BLOOM_FILTER_NAME);
+        if(Objects.nonNull(filter)){
+            filter.put(gCloudShareUrlVo.getShareId());
+            log.info("crate share, add share id to bloom filter, share id is {}", context.getRecord().getShareId());
+        }
     }
 }
 

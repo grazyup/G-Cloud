@@ -102,4 +102,14 @@ public interface GCloudShareService extends IService<GCloudShare> {
      * @param allAvailableFileIdList
      */
     void refreshShareStatus(List<Long> allAvailableFileIdList);
+
+
+    /**
+     * 滚动查询分享ID
+     *
+     * @param startId
+     * @param limit
+     * @return
+     */
+    List<Long> rollingQueryShareId(long startId, long limit);
 }

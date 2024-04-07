@@ -1,5 +1,6 @@
 package com.grazy.bloom.filter.local.config;
 
+import com.grazy.bloom.filter.local.enums.FunnelType;
 import lombok.Data;
 
 /**
@@ -19,7 +20,7 @@ public class LocalBloomFilterConfigItem {
     /**
      * 数据通道的名称
      */
-    private String funnelTypeName;
+    private String funnelTypeName = FunnelType.LONG.name();
 
     /**
      * 数组长度
