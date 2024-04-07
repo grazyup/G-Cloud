@@ -8,7 +8,7 @@ import java.util.Collection;
  * @Description: 布隆过滤器管理器顶级接口
  */
 
-public interface BloomFilterManager {
+public interface BloomFilterManager<T> {
 
     /**
      * 根据名称获取对应的布隆过滤器
@@ -16,7 +16,7 @@ public interface BloomFilterManager {
      * @param name
      * @return
      */
-    BloomFilter getFilter(String name);
+    BloomFilter<T> getFilter(String name);
 
 
     /**

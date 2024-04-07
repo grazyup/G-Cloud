@@ -30,7 +30,6 @@ public class LocalBloomFilterManager implements BloomFilterManager, Initializing
      */
     private final Map<String,BloomFilter> bloomFilterContainer = Maps.newConcurrentMap();
 
-
     /**
      * 根据名称获取对应的布隆过滤器
      *
@@ -55,7 +54,7 @@ public class LocalBloomFilterManager implements BloomFilterManager, Initializing
 
 
     /**
-     * 将配置文件中的过滤器信息初始化到容器中
+     * 初始化
      *
      * @throws Exception
      */
