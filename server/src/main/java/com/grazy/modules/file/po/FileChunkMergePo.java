@@ -30,7 +30,7 @@ public class FileChunkMergePo implements Serializable {
 
     @ApiModelProperty(value = "父文件夹ID",required = true)
     @NotNull(message = "父文件夹ID不能为空")
-    private Long parentId;
+    private String parentId;
 
     @ApiModelProperty(value = "文件总大小",required = true)
     @NotNull(message = "文件总大小不能为空")

@@ -69,7 +69,7 @@ public class ShareTokenAspect {
      */
     @Around("ShareAuthPointcut()")
     public Object ShareAuthAround(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-            //校验登录信息
+            //校验信息
             ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             HttpServletRequest request = servletRequestAttributes.getRequest();
             String requestURI = request.getRequestURI();

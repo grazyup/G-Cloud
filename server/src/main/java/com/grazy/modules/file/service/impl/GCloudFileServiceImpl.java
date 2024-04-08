@@ -193,6 +193,7 @@ public class GCloudFileServiceImpl extends ServiceImpl<GCloudFileMapper, GCloudF
             mergeFileContext.setRealPathList(realPathList);
             mergeFileContext.setUserId(context.getUserId());
             storageEngine.mergeFile(mergeFileContext);
+            context.setRealPath(mergeFileContext.getRealPath());
         }catch (IOException e){
             e.printStackTrace();
             throw new GCloudBusinessException("分片文件合并失败");

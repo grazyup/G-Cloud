@@ -43,7 +43,7 @@ public class RecycleController {
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
-    @GetMapping("/recycle")
+    @GetMapping("/recycles")
     public R<List<UserFileVO>> recycle(){
         QueryRecycleFileListContext queryRecycleFileListContext = new QueryRecycleFileListContext();
         queryRecycleFileListContext.setUserId(UserIdUtil.get());

@@ -97,6 +97,7 @@ public interface FileConverter {
 
 
     @Mapping(target = "userId", expression = "java(com.grazy.common.utils.UserIdUtil.get())")
+    @Mapping(target = "parentId", expression = "java(com.grazy.core.utils.IdUtil.decrypt(fileChunkMergePo.getParentId()))")
     FileChunkMergeContext FileChunkMergePoToFileChunkMergeContext(FileChunkMergePo fileChunkMergePo);
 
 

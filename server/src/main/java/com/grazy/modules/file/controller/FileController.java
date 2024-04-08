@@ -52,16 +52,16 @@ public class FileController {
     )
     @GetMapping("/files")
     public R<List<UserFileVO>> list(@NotBlank(message = "父文件夹ID不能为空") @RequestParam(value = "parentId",required = false) String parentId,
-                                    @RequestParam(value = "fileType",required = false,defaultValue = FileConstants.ALL_FILE_TYPE) String fileType){
+                                    @RequestParam(value = "fileTypes",required = false,defaultValue = FileConstants.ALL_FILE_TYPE) String fileTypes){
         Long decryptParentId = -1L;
         List<Integer> fileTypeList = null;
         if(!FileConstants.NO_DETAIL_FOLDER.equals(parentId)){ //判断parentId是否为-1（-1表示不是具体文件夹）
             //解密父文件夹Id
             decryptParentId = IdUtil.decrypt(parentId);
         }
-        if(!Objects.equals(FileConstants.ALL_FILE_TYPE,fileType)){ //判断fileType文件类型是否为-1(-1表示全部文件类型)
+        if(!Objects.equals(FileConstants.ALL_FILE_TYPE,fileTypes)){ //判断fileType文件类型是否为-1(-1表示全部文件类型)
             fileTypeList = Splitter.on(GCloudConstants.COMMON_SEPARATOR)
-                    .splitToList(fileType)
+                    .splitToList(fileTypes)
                     .stream()
                     .map(Integer::valueOf)
                     .collect(Collectors.toList());

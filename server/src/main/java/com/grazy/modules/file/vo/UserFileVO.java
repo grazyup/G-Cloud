@@ -40,7 +40,7 @@ public class UserFileVO implements Serializable {
     private Integer folderFlag;
 
     @ApiModelProperty("文件类型 1 普通文件 2 压缩文件 3 excel 4 word 5 pdf 6 txt 7 图片 8 音频 9 视频 10 ppt 11 源码文件 12 csv")
-    private String fileType;
+    private Integer fileType;
 
     @ApiModelProperty("更新时间")
     @JsonSerialize(using = Date2StringSerializer.class)
