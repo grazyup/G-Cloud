@@ -15,6 +15,7 @@
     <modules>
         <module>lock-core</module>
         <module>lock-local</module>
+        <module>lock-redis</module>
     </modules>
 
     <properties>
