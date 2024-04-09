@@ -11,6 +11,7 @@ import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.utils.FileUtils;
 import com.grazy.core.utils.UUIDUtil;
+import com.grazy.lock.core.annotation.LockAnnotation;
 import com.grazy.storage.engine.core.AbstractStorageEngine;
 import com.grazy.storage.engine.core.context.*;
 import com.grazy.storage.engine.oss.config.OSSStorageEngineConfigProperties;
@@ -142,6 +143,7 @@ public class OSSStorageEngine extends AbstractStorageEngine {
      * @param context
      * @throws IOException
      */
+    @LockAnnotation(name = "ossStoreChunkFile", keys = {"#context.userId", "#context.identifier"}, expireSecond = 10L)
     @Override
     protected void doStoreChunkFile(StoreChunkFileContext context) throws IOException {
         if(context.getTotalChunks() > TEN_THOUSAND_INT){

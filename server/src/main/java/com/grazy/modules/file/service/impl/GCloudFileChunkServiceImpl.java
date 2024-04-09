@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.grazy.common.config.GCloudServerConfigProperties;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.utils.IdUtil;
+import com.grazy.lock.core.annotation.LockAnnotation;
 import com.grazy.modules.file.context.FileChunkSaveContext;
 import com.grazy.modules.file.converter.FileConverter;
 import com.grazy.modules.file.domain.GCloudFileChunk;
@@ -45,8 +46,10 @@ public class GCloudFileChunkServiceImpl extends ServiceImpl<GCloudFileChunkMappe
      *
      * @param context 分片文件保存上下文信息
      */
+
+    @LockAnnotation(name = "saveChunkFileLock", keys = {"#context.userId", "#context.identifier"}, expireSecond = 10L)
     @Override
-    public synchronized void saveChunkFile(FileChunkSaveContext context) {
+    public void saveChunkFile(FileChunkSaveContext context) {
         doStoreChunkFile(context);
         saveChunkFileRecord(context);
         doJudgeMergeFile(context);

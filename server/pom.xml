@@ -86,6 +86,7 @@
             <version>1.0</version>
         </dependency>
 
+        <!--redis分布式锁-->
         <dependency>
             <groupId>com.grazy</groupId>
             <artifactId>G-Cloud-lock-redis</artifactId>
