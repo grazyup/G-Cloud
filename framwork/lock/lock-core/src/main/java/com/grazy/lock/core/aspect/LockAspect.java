@@ -41,6 +41,7 @@ public class LockAspect implements ApplicationContextAware {
     @Resource
     private LockRegistry lockRegistry;
 
+
     @Pointcut(value = "@annotation(com.grazy.lock.core.annotation.LockAnnotation)")
     public void lockPointCut() {
     }
@@ -63,10 +64,10 @@ public class LockAspect implements ApplicationContextAware {
         }
 
         Object result = null;
-        boolean tyrLockResult = false;
+        boolean tryLockResult = false;
         try {
-            tyrLockResult = lock.tryLock(lockContext.getAnnotation().expireSecond(), TimeUnit.SECONDS);
-            if (tyrLockResult) {
+            tryLockResult = lock.tryLock(lockContext.getAnnotation().expireSecond(), TimeUnit.SECONDS);
+            if (tryLockResult) {
                 Object[] args = proceedingJoinPoint.getArgs();
                 //携带目标方法的全部参数调用目标方法并携带其返回值返回
                 result = proceedingJoinPoint.proceed(args);
@@ -78,7 +79,7 @@ public class LockAspect implements ApplicationContextAware {
             log.error("lock aspect tryLock exception.", e);
             throw new GCloudBusinessException("aroundLock tryLock fail.");
         } finally {
-            if (tyrLockResult) {
+            if (tryLockResult) {
                 lock.unlock();
             }
         }
