@@ -1,77 +1,93 @@
 spring:
-  application:
-    name: G-Cloud-server
-  output:
-    ansi:
-      enabled: always
-  mvc:
+    application:
+        name: G-Cloud-server
+    output:
+        ansi:
+            enabled: always
+    mvc:
+        servlet:
+            load-on-startup: 1
     servlet:
-      load-on-startup: 1
-  servlet:
-    multipart:
-      max-file-size: 3072MB
-      max-request-size: 3072MB
-  datasource:
-    username: root
-    password: 250628
-    url: jdbc:mysql://localhost:3306/G-Cloud?characterEncoding=utf8&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  redis:
-#    host: 192.168.195.100
-    host: localhost
-    port: 6379
+        multipart:
+            max-file-size: 3072MB
+            max-request-size: 3072MB
+    datasource:
+        username: root
+        password: 250628
+        url: jdbc:mysql://localhost:3306/G-Cloud?characterEncoding=utf8&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    redis:
+        #    host: 192.168.195.100
+        host: localhost
+        port: 6379
+
+
+#spring-cloud-stream抽象框架集成rocketmq配置 （配置加载完成后创建channel通道）
+
+    cloud:
+        stream:
+            rocketmq:
+                binder:
+                    name-server: localhost:9876
+            bindings:
+                testInput:
+                    destination: testTopic
+                    group: testTopicGroup
+                testOutput:
+                    destination: testTopic
+
 
 mybatis-plus:
-  mapper-locations: classpath:mappers/**/*.xml
+    mapper-locations: classpath:mappers/**/*.xml
 
 server:
-  port: 8080
+    port: 8080
 
 management:
-  endpoints:
-    web:
-      exposure:
-        include: '*'
-        exclude: env,beans
+    endpoints:
+        web:
+            exposure:
+                include: '*'
+                exclude: env,beans
 
 
 swagger2:
-  show: true
-  group-name: ${spring.application.name}
-  base-package: com.grazy
-  title: G-Cloud-server docs
-  description: G-Cloud-server docs
-  terms-of-service-url: http://127.0.0.1:${server.port}
-  contact-name: grazy
-  contact-url: null
-  contact-email: grazyup@163.com
-  version: 1.0
+    show: true
+    group-name: ${spring.application.name}
+    base-package: com.grazy
+    title: G-Cloud-server docs
+    description: G-Cloud-server docs
+    terms-of-service-url: http://127.0.0.1:${server.port}
+    contact-name: grazy
+    contact-url: null
+    contact-email: grazyup@163.com
+    version: 1.0
 
 
 logging:
-  file: C:/Users/gaofu/logs/${spring.application.name}/${spring.application.name}.log
-  level:
-    root: INFO
+    file: C:/Users/gaofu/logs/${spring.application.name}/${spring.application.name}.log
+    level:
+        root: INFO
 
 com:
-  grazy:
-    cache:
-      caffeine:
-        init-cache-capacity: 128
-        max-cache-capacity: 10000
-        all-null-value: true
+    grazy:
+        cache:
+            caffeine:
+                init-cache-capacity: 128
+                max-cache-capacity: 10000
+                all-null-value: true
 
-    storage:
-      engine:
+        storage:
+            engine:
 
-    bloom:
-      filter:
-        local:
-          items:
-            - name: SHARE_SIMPLE_DETAIL
-              funnel-type-name: LONG
-              expected-insertions: 10000000
-              fpp: 0.01
+        bloom:
+            filter:
+                local:
+                    items:
+                        -   name: SHARE_SIMPLE_DETAIL
+                            funnel-type-name: LONG
+                            expected-insertions: 10000000
+                            fpp: 0.01
 
 #        fdfs:
 #          connect-timeout: 600

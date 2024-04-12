@@ -21,6 +21,9 @@ import java.util.Objects;
 
 public abstract class AbstractStreamProducer implements StreamProducer {
 
+    /**
+     * 容器中获取消息通道集合 key为channelName
+     */
     @Resource
     private Map<String, MessageChannel> channelMap;
 

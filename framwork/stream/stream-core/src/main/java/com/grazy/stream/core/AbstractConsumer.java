@@ -19,7 +19,7 @@ public abstract class AbstractConsumer {
      *
      * @param message
      */
-    protected void printLog(Message<Object> message) {
+    protected void printLog(Message message) {
         log.info("{} start consume message, the message is {}", this.getClass().getSimpleName(), message);
     }
 

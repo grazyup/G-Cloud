@@ -92,6 +92,13 @@
             <artifactId>G-Cloud-lock-redis</artifactId>
             <version>1.0</version>
         </dependency>
+
+        <!--消息队列-->
+        <dependency>
+            <groupId>com.grazy</groupId>
+            <artifactId>G-Cloud-stream-rocketmq</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
     <build>
