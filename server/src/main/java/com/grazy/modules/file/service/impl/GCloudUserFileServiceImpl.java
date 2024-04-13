@@ -4,8 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
-import com.grazy.common.event.file.DeleteFileEvent;
-import com.grazy.common.event.search.SearchEvent;
+import com.grazy.common.stream.channel.GCloudChannels;
+import com.grazy.common.stream.event.file.DeleteFileEvent;
+import com.grazy.common.stream.event.search.SearchEvent;
 import com.grazy.common.utils.HttpUtil;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
@@ -27,9 +28,9 @@ import com.grazy.modules.file.service.GCloudUserFileService;
 import com.grazy.modules.file.vo.*;
 import com.grazy.storage.engine.core.StorageEngine;
 import com.grazy.storage.engine.core.context.ReadFileContext;
+import com.grazy.stream.core.StreamProducer;
 import org.apache.commons.collections.CollectionUtils;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,7 +49,7 @@ import java.util.stream.Collectors;
  */
 
 @Service(value = "GCloudUserFileService")
-public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper, GCloudUserFile> implements GCloudUserFileService, ApplicationContextAware {
+public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper, GCloudUserFile> implements GCloudUserFileService{
 
     @Resource
     private GCloudUserFileMapper gCloudUserFileMapper;
@@ -69,11 +70,10 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
     private StorageEngine storageEngine;
 
 
-    private ApplicationContext applicationContext;
+    @Resource
+    @Qualifier(value = "defaultStreamProducer")
+    private StreamProducer producer;
 
-    public void setApplicationContext(ApplicationContext applicationContext){
-        this.applicationContext = applicationContext;
-    }
 
     /**
      * 创建文件夹信息
@@ -642,8 +642,8 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
      * @param deleteFileContext 文件删除上下文信息
      */
     private void pushDeleteFileEvent(DeleteFileContext deleteFileContext) {
-        DeleteFileEvent deleteFileEvent = new DeleteFileEvent(this, deleteFileContext.getFileIdList());
-        applicationContext.publishEvent(deleteFileEvent);
+        DeleteFileEvent deleteFileEvent = new DeleteFileEvent( deleteFileContext.getFileIdList());
+        producer.sendMessage(GCloudChannels.DELETE_FILE_OUTPUT, deleteFileEvent);
     }
 
 
@@ -1043,8 +1043,8 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
      * @param fileSearchContext
      */
     private void afterSearch(FileSearchContext fileSearchContext) {
-        SearchEvent searchEvent = new SearchEvent(this, fileSearchContext.getKeyword(), fileSearchContext.getUserId());
-        applicationContext.publishEvent(searchEvent);
+        SearchEvent searchEvent = new SearchEvent( fileSearchContext.getKeyword(), fileSearchContext.getUserId());
+        producer.sendMessage(GCloudChannels.USER_SEARCH_OUTPUT, searchEvent);
     }
 
 

@@ -30,7 +30,7 @@ public abstract class AbstractConsumer {
      * @param message
      * @return
      */
-    protected boolean isEmptyMessage(Message<Object> message){
+    protected boolean isEmptyMessage(Message message){
         if(Objects.isNull(message)){
             return true;
         }

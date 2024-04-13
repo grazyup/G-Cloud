@@ -2,7 +2,8 @@ package com.grazy.modules.file.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.grazy.common.event.log.ErrorLogEvent;
+import com.grazy.common.stream.channel.GCloudChannels;
+import com.grazy.common.stream.event.log.ErrorLogEvent;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.utils.FileUtils;
 import com.grazy.core.utils.IdUtil;
@@ -17,9 +18,9 @@ import com.grazy.storage.engine.core.StorageEngine;
 import com.grazy.storage.engine.core.context.DeleteStorageFileContext;
 import com.grazy.storage.engine.core.context.MergeFileContext;
 import com.grazy.storage.engine.core.context.StoreFileContext;
+import com.grazy.stream.core.StreamProducer;
 import org.assertj.core.util.Lists;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -36,7 +37,7 @@ import java.util.stream.Collectors;
 * @createDate 2024-01-24 17:41:31
 */
 @Service
-public class GCloudFileServiceImpl extends ServiceImpl<GCloudFileMapper, GCloudFile> implements GCloudFileService, ApplicationContextAware {
+public class GCloudFileServiceImpl extends ServiceImpl<GCloudFileMapper, GCloudFile> implements GCloudFileService{
 
     @Resource
     private StorageEngine storageEngine;
@@ -44,12 +45,11 @@ public class GCloudFileServiceImpl extends ServiceImpl<GCloudFileMapper, GCloudF
     @Resource
     private GCloudFileChunkService gCloudFileChunkService;
 
-    private ApplicationContext applicationContext;
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
+    @Resource
+    @Qualifier(value = "defaultStreamProducer")
+    private StreamProducer producer;
+
 
     /**
      * 上传文件并保存文件的实体记录
@@ -128,9 +128,8 @@ public class GCloudFileServiceImpl extends ServiceImpl<GCloudFileMapper, GCloudF
             }catch (IOException e){
                 e.printStackTrace();
                 //发布错误日志事件
-                ErrorLogEvent errorLogEvent = new ErrorLogEvent(this,
-                        "文件物理删除失败，请手动删除，文件路径为：" + realPath, userId);
-                applicationContext.publishEvent(errorLogEvent);
+                ErrorLogEvent errorLogEvent = new ErrorLogEvent("文件物理删除失败，请手动删除，文件路径为：" + realPath, userId);
+                producer.sendMessage(GCloudChannels.ERROR_LOG_OUTPUT, errorLogEvent);
             }
         }
         return gCloudFile;

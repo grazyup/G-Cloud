@@ -2,17 +2,18 @@ package com.grazy.common.schedule.task;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.grazy.common.event.log.ErrorLogEvent;
+import com.grazy.common.stream.channel.GCloudChannels;
+import com.grazy.common.stream.event.log.ErrorLogEvent;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.modules.file.domain.GCloudFileChunk;
 import com.grazy.modules.file.service.GCloudFileChunkService;
 import com.grazy.storage.engine.core.StorageEngine;
 import com.grazy.storage.engine.core.context.DeleteStorageFileContext;
+import com.grazy.stream.core.StreamProducer;
 import com.grazy.taskInterface.ScheduleTask;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class CleanExpireChunkFileTask implements ScheduleTask, ApplicationContextAware {
+public class CleanExpireChunkFileTask implements ScheduleTask{
 
     private static final Long BATCH_SIZE = 500L;
 
@@ -40,12 +41,9 @@ public class CleanExpireChunkFileTask implements ScheduleTask, ApplicationContex
     @Resource
     private StorageEngine storageEngine;
 
-    private ApplicationContext applicationContext;
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
+    @Resource
+    @Qualifier(value = "defaultStreamProducer")
+    private StreamProducer producer;
 
     @Override
     public String getScheduleTaskName() {
@@ -116,9 +114,9 @@ public class CleanExpireChunkFileTask implements ScheduleTask, ApplicationContex
      * @param realPathList
      */
     private void saveErrorLog(List<String> realPathList) {
-        ErrorLogEvent errorLogEvent = new ErrorLogEvent(this, "文件物理删除失败，请手动执行文件删除，文件路径为: "
+        ErrorLogEvent errorLogEvent = new ErrorLogEvent("文件物理删除失败，请手动执行文件删除，文件路径为: "
                 + JSON.toJSONString(realPathList), GCloudConstants.ZERO_LONG);
-        applicationContext.publishEvent(errorLogEvent);
+        producer.sendMessage(GCloudChannels.ERROR_LOG_OUTPUT, errorLogEvent);
     }
 
 

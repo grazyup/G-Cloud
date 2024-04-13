@@ -9,7 +9,8 @@ import com.grazy.bloom.filter.core.BloomFilter;
 import com.grazy.bloom.filter.core.BloomFilterManager;
 import com.grazy.common.cache.ManualCacheService;
 import com.grazy.common.config.GCloudServerConfigProperties;
-import com.grazy.common.event.log.ErrorLogEvent;
+import com.grazy.common.stream.channel.GCloudChannels;
+import com.grazy.common.stream.event.log.ErrorLogEvent;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.core.response.ResponseCode;
@@ -40,12 +41,11 @@ import com.grazy.modules.share.vo.ShareDetailVo;
 import com.grazy.modules.share.vo.ShareUserInfoVo;
 import com.grazy.modules.user.domain.GCloudUser;
 import com.grazy.modules.user.service.GCloudUserService;
+import com.grazy.stream.core.StreamProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
 */
 @Service
 @Slf4j
-public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GCloudShare> implements GCloudShareService, ApplicationContextAware {
+public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GCloudShare> implements GCloudShareService {
 
     @Resource
     private GCloudServerConfigProperties configProperties;
@@ -88,12 +88,10 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
     @Qualifier(value = "shareManualCacheService")
     private ManualCacheService<GCloudShare> cacheService;
 
-    private ApplicationContext applicationContext;
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
+    @Resource
+    @Qualifier(value = "defaultStreamProducer")
+    private StreamProducer producer;
 
     /**
      * 创建分享链接
@@ -749,7 +747,7 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
     private void doChangeShareStatus(GCloudShare record, ShareStatusEnum shareStatus) {
         record.setShareStatus(shareStatus.getCode());
         if(!updateById(record)){
-            applicationContext.publishEvent(new ErrorLogEvent(this,"更新分享状态失败，请手动更改状态，分享ID为：" + record.getShareId() + ", 分享" +
+           producer.sendMessage(GCloudChannels.ERROR_LOG_OUTPUT, new ErrorLogEvent("更新分享状态失败，请手动更改状态，分享ID为：" + record.getShareId() + ", 分享" +
                     "状态改为：" +  shareStatus.getCode(), GCloudConstants.ZERO_LONG));
         }
     }

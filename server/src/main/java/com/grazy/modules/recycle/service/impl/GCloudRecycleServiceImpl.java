@@ -1,8 +1,9 @@
 package com.grazy.modules.recycle.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.grazy.common.event.file.FilePhysicalDeleteEvent;
-import com.grazy.common.event.file.FileRestoreEvent;
+import com.grazy.common.stream.channel.GCloudChannels;
+import com.grazy.common.stream.event.file.FilePhysicalDeleteEvent;
+import com.grazy.common.stream.event.file.FileRestoreEvent;
 import com.grazy.core.constants.GCloudConstants;
 import com.grazy.core.exception.GCloudBusinessException;
 import com.grazy.modules.file.context.QueryFileListContext;
@@ -14,8 +15,8 @@ import com.grazy.modules.recycle.context.DeleteContext;
 import com.grazy.modules.recycle.context.QueryRecycleFileListContext;
 import com.grazy.modules.recycle.context.RestoreContext;
 import com.grazy.modules.recycle.service.GCloudRecycleService;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import com.grazy.stream.core.StreamProducer;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -32,17 +33,14 @@ import java.util.stream.Collectors;
  */
 
 @Service
-public class GCloudRecycleServiceImpl implements GCloudRecycleService, ApplicationContextAware {
+public class GCloudRecycleServiceImpl implements GCloudRecycleService {
 
     @Resource
     private GCloudUserFileService userFileService;
 
-    private ApplicationContext applicationContext;
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
+    @Resource
+    @Qualifier(value = "defaultStreamProducer")
+    private StreamProducer producer;
 
 
     /**
@@ -106,8 +104,8 @@ public class GCloudRecycleServiceImpl implements GCloudRecycleService, Applicati
      * @param context
      */
     private void afterRestore(RestoreContext context) {
-        FileRestoreEvent fileRestoreEvent = new FileRestoreEvent(this, context.getFileIdList());
-        applicationContext.publishEvent(fileRestoreEvent);
+        FileRestoreEvent fileRestoreEvent = new FileRestoreEvent(context.getFileIdList());
+        producer.sendMessage(GCloudChannels.FILE_RESTORE_OUTPUT,fileRestoreEvent);
     }
 
 
@@ -188,8 +186,8 @@ public class GCloudRecycleServiceImpl implements GCloudRecycleService, Applicati
      * @param context
      */
     private void afterDelete(DeleteContext context){
-        FilePhysicalDeleteEvent event = new FilePhysicalDeleteEvent(this, context.getAllRecords());
-        applicationContext.publishEvent(event);
+        FilePhysicalDeleteEvent event = new FilePhysicalDeleteEvent(context.getAllRecords());
+        producer.sendMessage(GCloudChannels.PHYSICAL_DELETE_FILE_OUTPUT, event);
     }
 
 

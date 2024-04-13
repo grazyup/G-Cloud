@@ -2,6 +2,7 @@ package com.grazy.common.stream.channel;
 
 import org.springframework.cloud.stream.annotation.Input;
 import org.springframework.cloud.stream.annotation.Output;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.SubscribableChannel;
 
 /**
@@ -20,6 +21,21 @@ public interface GCloudChannels {
     String TEST_OUTPUT = "testOutput";
 
 
+    String ERROR_LOG_INPUT = "errorLogInput";
+    String ERROR_LOG_OUTPUT = "errorLogOutput";
+
+    String DELETE_FILE_INPUT = "deleteFileInput";
+    String DELETE_FILE_OUTPUT = "deleteFileOutput";
+
+    String FILE_RESTORE_INPUT = "fileRestoreInput";
+    String FILE_RESTORE_OUTPUT = "fileRestoreOutput";
+
+    String PHYSICAL_DELETE_FILE_INPUT = "physicalDeleteFileInput";
+    String PHYSICAL_DELETE_FILE_OUTPUT = "physicalDeleteFileOutput";
+
+    String USER_SEARCH_INPUT = "userSearchInput";
+    String USER_SEARCH_OUTPUT = "userSearchOutput";
+
     /**
      * 测试输入通道
      *
@@ -35,5 +51,36 @@ public interface GCloudChannels {
      * @return
      */
     @Output(TEST_OUTPUT)
-    SubscribableChannel testOutput();
+    MessageChannel testOutput();
+
+
+    @Input(GCloudChannels.ERROR_LOG_INPUT)
+    SubscribableChannel errorLogInput();
+
+    @Output(GCloudChannels.ERROR_LOG_OUTPUT)
+    MessageChannel errorLogOutput();
+
+    @Input(GCloudChannels.DELETE_FILE_INPUT)
+    SubscribableChannel deleteFileInput();
+
+    @Output(GCloudChannels.DELETE_FILE_OUTPUT)
+    MessageChannel deleteFileOutput();
+
+    @Input(GCloudChannels.FILE_RESTORE_INPUT)
+    SubscribableChannel fileRestoreInput();
+
+    @Output(GCloudChannels.FILE_RESTORE_OUTPUT)
+    MessageChannel fileRestoreOutput();
+
+    @Input(GCloudChannels.PHYSICAL_DELETE_FILE_INPUT)
+    SubscribableChannel physicalDeleteFileInput();
+
+    @Output(GCloudChannels.PHYSICAL_DELETE_FILE_OUTPUT)
+    MessageChannel physicalDeleteFileOutput();
+
+    @Input(GCloudChannels.USER_SEARCH_INPUT)
+    SubscribableChannel userSearchInput();
+
+    @Output(GCloudChannels.USER_SEARCH_OUTPUT)
+    MessageChannel userSearchOutput();
 }
