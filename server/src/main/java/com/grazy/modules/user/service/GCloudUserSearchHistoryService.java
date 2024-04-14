@@ -1,7 +1,11 @@
 package com.grazy.modules.user.service;
 
+import com.grazy.modules.user.context.QueryUserSearchHistoryContext;
 import com.grazy.modules.user.domain.GCloudUserSearchHistory;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.grazy.modules.user.vo.UserSearchHistoryVO;
+
+import java.util.List;
 
 /**
 * @author gaofu
@@ -10,4 +14,12 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface GCloudUserSearchHistoryService extends IService<GCloudUserSearchHistory> {
 
+
+    /**
+     * 查询用户的搜索历史记录，默认十条
+     *
+     * @param context
+     * @return
+     */
+    List<UserSearchHistoryVO> getUserSearchHistories(QueryUserSearchHistoryContext context);
 }

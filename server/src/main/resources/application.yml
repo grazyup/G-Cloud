@@ -92,7 +92,8 @@ swagger2:
 logging:
     file: C:/Users/gaofu/logs/${spring.application.name}/${spring.application.name}.log
     level:
-        root: INFO
+        root: info
+#        com.grazy: debug
 
 com:
     grazy:
@@ -102,9 +103,24 @@ com:
                 max-cache-capacity: 10000
                 all-null-value: true
 
+        #文件数据存储
         storage:
             engine:
+#                fdfs:
+#                  connect-timeout: 600
+#                  tracker-list:
+#                    - 192.168.195.100:22122
+#                  group: group1
+#
+#                oss:
+#                  access-key-id:
+#                  access-key-secret:
+#                  bucket-name:
+#                  endpoint:
+#                  auto-create-bucket: true
 
+
+        #本地布隆过滤器
         bloom:
             filter:
                 local:
@@ -114,16 +130,4 @@ com:
                             expected-insertions: 10000000
                             fpp: 0.01
 
-#        fdfs:
-#          connect-timeout: 600
-#          tracker-list:
-#            - 192.168.195.100:22122
-#          group: group1
-
-#        oss:
-#          access-key-id:
-#          access-key-secret:
-#          bucket-name:
-#          endpoint:
-#          auto-create-bucket: true
 

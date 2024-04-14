@@ -21,13 +21,13 @@ public class userIdKeyGenerator implements KeyGenerator {
     @Override
     public Object generate(Object target, Method method, Object... params) {
         StringBuilder stringBuilder = new StringBuilder(USER_ID_PREFIX);
-        if(params == null || params.length == 0){
+        if (params == null || params.length == 0) {
             return stringBuilder.toString();
         }
         Serializable id;
         for (Object param : params) {
-            if(param instanceof Serializable){
-                id = (Serializable) params;
+            if (param instanceof Serializable) {
+                id = (Serializable) param;
                 stringBuilder.append(id);
                 return stringBuilder.toString();
             }

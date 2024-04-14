@@ -27,7 +27,7 @@ public class R<T> implements Serializable {
     /**
      * 响应消息
      */
-    private String msg;
+    private String message;
 
     /**
      * 响应数据
@@ -38,9 +38,9 @@ public class R<T> implements Serializable {
         this.code = code;
     }
 
-    private R(Integer code, String msg){
+    private R(Integer code, String message){
         this.code = code;
-        this.msg = msg;
+        this.message = message;
     }
 
     private R(Integer code, T data){
@@ -48,9 +48,9 @@ public class R<T> implements Serializable {
         this.data = data;
     }
 
-    private R(Integer code, String msg, T data){
+    private R(Integer code, String message, T data){
         this.code = code;
-        this.msg = msg;
+        this.message = message;
         this.data = data;
     }
 
@@ -72,8 +72,8 @@ public class R<T> implements Serializable {
     /**
      * 成功--自定义响应消息
      */
-    public static <T> R<T> success(String msg){
-        return new R<>(ResponseCode.SUCCESS.getCode(),msg);
+    public static <T> R<T> success(String message){
+        return new R<>(ResponseCode.SUCCESS.getCode(),message);
     }
 
     /**
@@ -86,8 +86,8 @@ public class R<T> implements Serializable {
     /**
      * 成功--自定义响应消息与携带响应数据
      */
-    public static <T> R<T> success(String msg, T data){
-        return new R<>(ResponseCode.SUCCESS.getCode(), msg, data);
+    public static <T> R<T> success(String message, T data){
+        return new R<>(ResponseCode.SUCCESS.getCode(), message, data);
     }
 
     /**
@@ -100,15 +100,15 @@ public class R<T> implements Serializable {
     /**
      * 失败--自定义失败状态码与失败响应消息
      */
-    public static <T> R<T> fail(Integer error_code, String error_msg){
-        return new R<>(error_code,error_msg);
+    public static <T> R<T> fail(Integer error_code, String error_message){
+        return new R<>(error_code,error_message);
     }
 
     /**
      * 失败--自定义失败响应消息
      */
-    public static <T> R<T> fail(String error_msg){
-        return new R<>(ResponseCode.ERROR.getCode(),error_msg);
+    public static <T> R<T> fail(String error_message){
+        return new R<>(ResponseCode.ERROR.getCode(),error_message);
     }
 
     /**

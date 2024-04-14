@@ -112,7 +112,7 @@ public class GCloudUserServiceImpl extends ServiceImpl<GCloudUserMapper, GCloudU
         try{
             //获取缓存管理器
             Cache cache = cacheManager.getCache(CacheConstants.G_CLOUD_CACHE_NAME);
-            cache.evict(UserConstant.USER_LOGIN_PREFIX +userId);
+            cache.evict(UserConstant.USER_LOGIN_PREFIX + userId);
         }catch (Exception ex){
             ex.printStackTrace();
             throw new GCloudBusinessException("退出登录失败！");

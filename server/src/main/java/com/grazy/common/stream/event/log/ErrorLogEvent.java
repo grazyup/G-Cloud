@@ -1,9 +1,6 @@
 package com.grazy.common.stream.event.log;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.io.Serializable;
 
@@ -17,6 +14,7 @@ import java.io.Serializable;
 @Getter
 @EqualsAndHashCode
 @ToString
+@NoArgsConstructor
 public class ErrorLogEvent implements Serializable {
 
     private static final long serialVersionUID = -498664464440291721L;

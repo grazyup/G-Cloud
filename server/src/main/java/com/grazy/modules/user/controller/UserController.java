@@ -134,7 +134,7 @@ public class UserController {
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @ApiImplicitParam(name = "Authorization", value = "Authorization",required = true, dataType = "String",paramType="header")
-    @PostMapping("/password/onlineChange")
+    @PostMapping("/password/change")
     public R<String> passwordOnlineChange(@Validated @RequestBody OnlineChangePasswordPo onlineChangePasswordPo){
         OnlineChangePasswordContext onlineChangePasswordContext = userConverter.OnlineChangePasswordPoToOnlineChangePasswordContext(onlineChangePasswordPo);
         onlineChangePasswordContext.setUserId(UserIdUtil.get());

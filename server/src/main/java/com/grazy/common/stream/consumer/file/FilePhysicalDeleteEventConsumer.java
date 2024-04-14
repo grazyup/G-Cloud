@@ -134,6 +134,6 @@ public class FilePhysicalDeleteEventConsumer extends AbstractConsumer {
     private boolean isUnused(GCloudUserFile gCloudUserFile) {
         LambdaQueryWrapper<GCloudUserFile> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(GCloudUserFile::getRealFileId,gCloudUserFile.getRealFileId());
-        return gCloudUserFileService.count(lambdaQueryWrapper) != GCloudConstants.ZERO_INT.intValue();
+        return gCloudUserFileService.count(lambdaQueryWrapper) == GCloudConstants.ZERO_INT.intValue();
     }
 }

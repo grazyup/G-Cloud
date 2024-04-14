@@ -5,7 +5,6 @@ import com.grazy.constants.CacheConstants;
 import com.grazy.modules.user.domain.GCloudUser;
 import com.grazy.modules.user.mapper.GCloudUserMapper;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
@@ -45,7 +44,7 @@ public class UserCacheService implements AnnotationCacheService<GCloudUser> {
      * @param entity
      * @return
      */
-    @CachePut(cacheNames = CacheConstants.G_CLOUD_CACHE_NAME, keyGenerator = "userIdKeyGenerator")
+    @CacheEvict(cacheNames = CacheConstants.G_CLOUD_CACHE_NAME, keyGenerator = "userIdKeyGenerator")
     @Override
     public boolean updateById(Serializable id, GCloudUser entity) {
         return gCloudUserMapper.updateById(entity) == 1;

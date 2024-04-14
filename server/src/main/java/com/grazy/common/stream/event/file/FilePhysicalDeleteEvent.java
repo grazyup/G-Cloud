@@ -1,10 +1,7 @@
 package com.grazy.common.stream.event.file;
 
 import com.grazy.modules.file.domain.GCloudUserFile;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.List;
@@ -19,6 +16,7 @@ import java.util.List;
 @Setter
 @EqualsAndHashCode
 @ToString
+@NoArgsConstructor
 public class FilePhysicalDeleteEvent implements Serializable {
 
     private static final long serialVersionUID = -1470822362298119320L;

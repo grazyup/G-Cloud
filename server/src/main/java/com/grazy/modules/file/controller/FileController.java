@@ -301,7 +301,7 @@ public class FileController {
     public R<List<FileSearchResultVo>> search(@Validated FileSearchPo fileSearchPo){
         FileSearchContext fileSearchContext = new FileSearchContext();
         fileSearchContext.setUserId(UserIdUtil.get());
-        fileSearchContext.setKeyword(fileSearchContext.getKeyword());
+        fileSearchContext.setKeyword(fileSearchPo.getKeyword());
         String fileTypes = fileSearchPo.getFileTypes();
         if(StringUtils.isNotBlank(fileTypes) && !Objects.equals(FileConstants.NO_DETAIL_FOLDER,fileTypes)) {
             List<Integer> filetypeList = Splitter.on(GCloudConstants.COMMON_SEPARATOR)

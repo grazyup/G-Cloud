@@ -1,9 +1,6 @@
 package com.grazy.common.stream.event.file;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.List;
@@ -18,6 +15,7 @@ import java.util.List;
 @Getter
 @EqualsAndHashCode
 @ToString
+@NoArgsConstructor
 public class DeleteFileEvent implements Serializable {
 
     private static final long serialVersionUID = 9013744299773098987L;

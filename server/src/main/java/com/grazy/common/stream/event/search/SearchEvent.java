@@ -1,9 +1,6 @@
 package com.grazy.common.stream.event.search;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.io.Serializable;
 
@@ -17,6 +14,7 @@ import java.io.Serializable;
 @Getter
 @EqualsAndHashCode
 @ToString
+@NoArgsConstructor
 public class SearchEvent implements Serializable {
 
     private static final long serialVersionUID = -7337340464624716485L;

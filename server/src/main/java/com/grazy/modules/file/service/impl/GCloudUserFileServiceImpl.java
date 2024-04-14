@@ -264,7 +264,7 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         if(!record.getUserId().equals(context.getUserId())){
             throw new GCloudBusinessException("您没有该文件的操作权限");
         }
-        if(!FolderFlagEnum.YES.getCode().equals(record.getFolderFlag())){
+        if(FolderFlagEnum.YES.getCode().equals(record.getFolderFlag())){
             throw new GCloudBusinessException("文件夹暂不支持下载");
         }
         doDownload(context.getResponse(),record);
@@ -282,7 +282,7 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         if(Objects.isNull(record)){
             throw new GCloudBusinessException("文件资源不存在");
         }
-        if(!FolderFlagEnum.YES.getCode().equals(record.getFolderFlag())){
+        if(FolderFlagEnum.YES.getCode().equals(record.getFolderFlag())){
             throw new GCloudBusinessException("文件夹暂不支持下载");
         }
         doDownload(context.getResponse(),record);
@@ -740,7 +740,10 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
      * @param record
      */
     private void doDownload(HttpServletResponse response, GCloudUserFile record) {
-        GCloudFile gCloudFile = gCloudFileService.getById(record.getFileId());
+        GCloudFile gCloudFile = gCloudFileService.getById(record.getRealFileId());
+        if(Objects.isNull(gCloudFile)){
+            throw new GCloudBusinessException("当前的文件记录不存在");
+        }
         addCommonResponseHeader(response, MediaType.APPLICATION_OCTET_STREAM_VALUE);
         addDownloadAttribute(gCloudFile, response);
         realFileToOutputStream(gCloudFile.getRealPath(),response);
@@ -1060,10 +1063,10 @@ public class GCloudUserFileServiceImpl extends ServiceImpl<GCloudUserFileMapper,
         List<Long> parentIdList = fileSearchResultVoList.stream()
                 .map(FileSearchResultVo::getParentId)
                 .collect(Collectors.toList());
-        List<GCloudFile> parentFileList = gCloudFileService.listByIds(parentIdList);
+        List<GCloudUserFile> parentFileList = listByIds(parentIdList);
         Map<Long, String> parentFileMap = parentFileList.stream()
-                .collect(Collectors.toMap(GCloudFile::getFileId, GCloudFile::getFilename));
-        fileSearchResultVoList.stream().forEach(value -> value.setFilename(parentFileMap.get(value.getParentId())));
+                .collect(Collectors.toMap(GCloudUserFile::getFileId, GCloudUserFile::getFilename));
+        fileSearchResultVoList.stream().forEach(value -> value.setParentFilename(parentFileMap.get(value.getParentId())));
     }
 
 

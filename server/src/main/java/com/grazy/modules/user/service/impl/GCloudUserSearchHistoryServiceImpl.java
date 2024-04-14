@@ -1,10 +1,14 @@
 package com.grazy.modules.user.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.grazy.modules.user.context.QueryUserSearchHistoryContext;
 import com.grazy.modules.user.domain.GCloudUserSearchHistory;
 import com.grazy.modules.user.service.GCloudUserSearchHistoryService;
 import com.grazy.modules.user.mapper.GCloudUserSearchHistoryMapper;
+import com.grazy.modules.user.vo.UserSearchHistoryVO;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
 * @author gaofu
@@ -15,6 +19,17 @@ import org.springframework.stereotype.Service;
 public class GCloudUserSearchHistoryServiceImpl extends ServiceImpl<GCloudUserSearchHistoryMapper, GCloudUserSearchHistory>
     implements GCloudUserSearchHistoryService{
 
+
+    /**
+     * 查询用户的搜索历史记录，默认十条
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public List<UserSearchHistoryVO> getUserSearchHistories(QueryUserSearchHistoryContext context) {
+        return baseMapper.selectUserSearchHistories(context);
+    }
 }
 
 
