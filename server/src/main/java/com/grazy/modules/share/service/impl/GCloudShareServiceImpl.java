@@ -662,12 +662,12 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
         if(CollectionUtils.isEmpty(allFileRecords)){
             return Lists.newArrayList();
         }
-        List<Long> allFileIdList = allFileRecords
+        allFileRecords = allFileRecords
                 .stream()
                 .filter(Objects::nonNull)
                 .filter(record -> Objects.equals(record.getDelFlag(), DelFlagEnum.NO.getCode()))
-                .map(GCloudUserFile::getFileId)
                 .collect(Collectors.toList());
+        List<Long> allFileIdList = allFileRecords.stream().map(GCloudUserFile::getFileId).collect(Collectors.toList());
         if(allFileIdList.containsAll(newArrayList)){
             return gCloudUserFileService.transferVOList(allFileRecords);
         }
@@ -787,7 +787,7 @@ public class GCloudShareServiceImpl extends ServiceImpl<GCloudShareMapper, GClou
         if(Objects.equals(record.getParentId(), FileConstants.TOP_PARENT_ID)){
             return true;
         }
-        return checkShareFileAvailable(record.getParentId());
+        return checkUpFileAvailable(record.getParentId());
     }
 
 
